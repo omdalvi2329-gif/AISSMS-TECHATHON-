@@ -357,21 +357,69 @@
 }
 
 /* Responsive Styles */
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   .market-main-content {
+    max-width: 100%;
     padding: 15px;
   }
-  
+
+  .feed-header h2 {
+    font-size: 20px;
+  }
+
   .demand-card, .post-card {
     padding: 15px;
+    border-radius: 16px;
   }
-  
+
+  .crop-info h3 {
+    font-size: 18px;
+  }
+
   .stats-grid {
     grid-template-columns: 1fr 1fr;
-    gap: 15px;
+    gap: 12px;
   }
-  
+
   .stat-item:last-child {
     grid-column: span 2;
+  }
+
+  .post-details {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .bottom-tabs {
+    height: 70px;
+  }
+}
+
+@media (max-width: 480px) {
+  .market-nav {
+    padding: 10px 15px;
+    gap: 10px;
+  }
+
+  .market-logo h1 {
+    font-size: 16px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-item:last-child {
+    grid-column: span 1;
+  }
+
+  .notif-item {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .notif-icon {
+    width: 32px;
+    height: 32px;
   }
 }

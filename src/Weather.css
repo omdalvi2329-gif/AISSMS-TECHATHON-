@@ -266,25 +266,52 @@
 /* Responsive Styles */
 @media (max-width: 600px) {
   .weather-page {
-    padding: 15px;
+    padding: 10px;
   }
   
+  .weather-nav {
+    margin-bottom: 25px;
+  }
+
+  .nav-title {
+    font-size: 18px;
+  }
+
+  .search-hero {
+    margin-bottom: 25px;
+  }
+
   .search-title {
-    font-size: 26px;
+    font-size: 24px;
   }
   
   .weather-result-card {
-    padding: 30px 20px;
+    padding: 25px 15px;
+    border-radius: 24px;
   }
   
   .city-name {
-    font-size: 28px;
+    font-size: 26px;
   }
   
+  .temp-section {
+    gap: 15px;
+    flex-direction: column;
+  }
+
   .temp-value {
     font-size: 48px;
   }
   
+  .weather-details-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .detail-item {
+    padding: 15px;
+  }
+
   .weather-icon-large svg {
     width: 60px;
     height: 60px;
