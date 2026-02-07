@@ -4,6 +4,7 @@ import Dashboard from './Dashboard';
 import Weather from './Weather';
 import GlobalMarket from './GlobalMarket';
 import MarketPrice from './MarketPrice';
+import FarmMap from './FarmMap';
 import './App.css';
 
 function App() {
@@ -53,6 +54,10 @@ function App() {
 
   const navigateToDashboard = () => {
     setCurrentPage('dashboard');
+  };
+
+  const navigateToFarmMap = () => {
+    setCurrentPage('farm-map');
   };
 
   // Form validation
@@ -142,12 +147,16 @@ function App() {
     if (currentPage === 'global-market') {
       return <GlobalMarket onBack={navigateToDashboard} t={t} />;
     }
+    if (currentPage === 'farm-map') {
+      return <FarmMap onBack={navigateToDashboard} t={t} />;
+    }
     return (
       <Dashboard 
         onLogout={handleLogout} 
         onNavigateToWeather={navigateToWeather} 
         onNavigateToMarket={navigateToMarket} 
         onNavigateToGlobalMarket={navigateToGlobalMarket}
+        onNavigateToFarmMap={navigateToFarmMap}
         farmerName={userName}
         currentLanguage={currentLanguage}
         onLanguageChange={handleLanguageChange}

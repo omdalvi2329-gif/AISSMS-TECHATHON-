@@ -1,10 +1,50 @@
-import React, { useState } from 'react';
-import { Search, Cloud, Sun, CloudRain, Wind, Droplets, ArrowLeft } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Search, Cloud, Sun, CloudRain, Wind, Droplets, ArrowLeft, Mic, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './Weather.css';
 
-const WeatherSearch = ({ onSearch, t }) => {
+const WeatherSearch = ({ onSearch, t, currentLanguage }) => {
   const [city, setCity] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
+  const recognitionRef = useRef(null);
+
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+
+      recognitionRef.current.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        // Basic cleaning to extract city name from sentences like "Nagpur ka weather batao"
+        const cleanCity = transcript.replace(/[^\w\s]/gi, '').split(' ').pop();
+        setCity(cleanCity);
+        setIsRecording(false);
+        onSearch(cleanCity);
+      };
+
+      recognitionRef.current.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsRecording(false);
+        alert(t.micError || 'Speech recognition failed. Please try again.');
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsRecording(false);
+      };
+    }
+  }, [onSearch, t.micError]);
+
+  const startRecording = () => {
+    if (recognitionRef.current) {
+      setIsRecording(true);
+      recognitionRef.current.lang = currentLanguage === 'hi' ? 'hi-IN' : currentLanguage === 'mr' ? 'hi-IN' : 'en-US';
+      recognitionRef.current.start();
+    } else {
+      alert('Speech recognition not supported in this browser.');
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -22,11 +62,19 @@ const WeatherSearch = ({ onSearch, t }) => {
     >
       <form onSubmit={handleSubmit} className="search-form">
         <div className="search-input-wrapper">
-          <Search className="search-icon" size={24} />
+          <button 
+            type="button" 
+            className={`mic-search-btn ${isRecording ? 'active' : ''}`}
+            onClick={isRecording ? () => recognitionRef.current.stop() : startRecording}
+            title="Voice Search"
+          >
+            {isRecording ? <Loader2 className="animate-spin" size={24} /> : <Mic size={24} />}
+            {isRecording && <div className="mic-pulse"></div>}
+          </button>
           <input
             type="text"
             className="weather-input"
-            placeholder={t.weatherPlaceholder}
+            placeholder={isRecording ? "Listening for city..." : t.weatherPlaceholder}
             value={city}
             onChange={(e) => setCity(e.target.value)}
             autoFocus
@@ -106,12 +154,20 @@ const WeatherResult = ({ data, t }) => {
       
       <div className="farmer-advice">
         <p>💡 <strong>{t.farmerTip}:</strong> {data.temp > 30 ? t.tipHeat : data.condition.toLowerCase().includes('rain') ? t.tipRain : t.tipIdeal}</p>
+        <div className="advisory-badges">
+          <span className={`advisory-badge ${data.fieldWork.toLowerCase().replace(/ /g, '-')}`}>
+            {data.fieldWork}
+          </span>
+          <span className="advisory-text">
+            {data.specificAdvice}
+          </span>
+        </div>
       </div>
     </motion.div>
   );
 };
 
-const Weather = ({ onBack, t }) => {
+const Weather = ({ onBack, t, currentLanguage }) => {
   const [weatherData, setWeatherData] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState(null);
@@ -133,13 +189,30 @@ const Weather = ({ onBack, t }) => {
       
       const data = await response.json();
       
+      // Determine field work suitability and specific advice
+      let fieldWork = "Suitable";
+      let specificAdvice = "";
+      const condition = data.weather[0].main.toLowerCase();
+      
+      if (condition.includes('rain')) {
+        fieldWork = "Avoid Field Work";
+        specificAdvice = "Wait for dry weather for spraying.";
+      } else if (data.main.temp > 35) {
+        fieldWork = "Avoid Afternoon Work";
+        specificAdvice = "High heat detected. Ensure proper irrigation.";
+      } else {
+        specificAdvice = "Ideal conditions for field operations.";
+      }
+
       setWeatherData({
         city: data.name,
         temp: data.main.temp,
         condition: data.weather[0].main,
         icon: data.weather[0].icon,
         humidity: data.main.humidity,
-        windSpeed: data.wind.speed
+        windSpeed: data.wind.speed,
+        fieldWork,
+        specificAdvice
       });
     } catch (err) {
       setError(t.unableToFetch);
@@ -167,7 +240,7 @@ const Weather = ({ onBack, t }) => {
           </div>
         )}
 
-        <WeatherSearch onSearch={handleSearch} t={t} />
+        <WeatherSearch onSearch={handleSearch} t={t} currentLanguage={currentLanguage} />
 
         <AnimatePresence mode="wait">
           {isSearching && (
