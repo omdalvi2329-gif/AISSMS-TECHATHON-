@@ -5,6 +5,7 @@ import Weather from './Weather';
 import GlobalMarket from './GlobalMarket';
 import MarketPrice from './MarketPrice';
 import FarmMap from './FarmMap';
+import AIChatPage from './AIChatPage';
 import './App.css';
 
 function App() {
@@ -58,6 +59,10 @@ function App() {
 
   const navigateToFarmMap = () => {
     setCurrentPage('farm-map');
+  };
+
+  const navigateToAIChat = () => {
+    setCurrentPage('ai-chat');
   };
 
   // Form validation
@@ -150,6 +155,9 @@ function App() {
     if (currentPage === 'farm-map') {
       return <FarmMap onBack={navigateToDashboard} t={t} />;
     }
+    if (currentPage === 'ai-chat') {
+      return <AIChatPage onBack={navigateToDashboard} t={t} currentLanguage={currentLanguage} farmerName={userName} />;
+    }
     return (
       <Dashboard 
         onLogout={handleLogout} 
@@ -157,6 +165,7 @@ function App() {
         onNavigateToMarket={navigateToMarket} 
         onNavigateToGlobalMarket={navigateToGlobalMarket}
         onNavigateToFarmMap={navigateToFarmMap}
+        onNavigateToAIChat={navigateToAIChat}
         farmerName={userName}
         currentLanguage={currentLanguage}
         onLanguageChange={handleLanguageChange}
