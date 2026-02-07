@@ -19,7 +19,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { languages } from './translations';
 import './Dashboard.css';
 
-const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, farmerName, currentLanguage, onLanguageChange, t }) => {
+const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNavigateToGlobalMarket, farmerName, currentLanguage, onLanguageChange, t }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
@@ -42,7 +42,8 @@ const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, farmerNa
       title: t.marketPrice,
       description: t.marketPriceDesc,
       icon: <TrendingUp className="card-icon" />,
-      color: "#10b981"
+      color: "#10b981",
+      onClick: onNavigateToMarket
     },
     {
       id: 3,
@@ -50,7 +51,7 @@ const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, farmerNa
       description: t.globalMarketDesc,
       icon: <Globe className="card-icon" />,
       color: "#8b5cf6",
-      onClick: onNavigateToMarket
+      onClick: onNavigateToGlobalMarket
     },
     {
       id: 4,

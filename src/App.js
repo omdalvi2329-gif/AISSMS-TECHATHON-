@@ -3,6 +3,7 @@ import { translations, languages } from './translations';
 import Dashboard from './Dashboard';
 import Weather from './Weather';
 import GlobalMarket from './GlobalMarket';
+import MarketPrice from './MarketPrice';
 import './App.css';
 
 function App() {
@@ -44,6 +45,10 @@ function App() {
 
   const navigateToMarket = () => {
     setCurrentPage('market');
+  };
+
+  const navigateToGlobalMarket = () => {
+    setCurrentPage('global-market');
   };
 
   const navigateToDashboard = () => {
@@ -132,6 +137,9 @@ function App() {
       return <Weather onBack={navigateToDashboard} t={t} />;
     }
     if (currentPage === 'market') {
+      return <MarketPrice onBack={navigateToDashboard} t={t} />;
+    }
+    if (currentPage === 'global-market') {
       return <GlobalMarket onBack={navigateToDashboard} t={t} />;
     }
     return (
@@ -139,6 +147,7 @@ function App() {
         onLogout={handleLogout} 
         onNavigateToWeather={navigateToWeather} 
         onNavigateToMarket={navigateToMarket} 
+        onNavigateToGlobalMarket={navigateToGlobalMarket}
         farmerName={userName}
         currentLanguage={currentLanguage}
         onLanguageChange={handleLanguageChange}
