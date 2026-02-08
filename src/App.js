@@ -8,6 +8,7 @@ import FarmMap from './FarmMap';
 import AIChatPage from './AIChatPage';
 import FarmerOnboarding from './FarmerOnboarding';
 import SeasonalAdvice from './SeasonalAdvice';
+import LiveMandi from './LiveMandi';
 import './App.css';
 
 function App() {
@@ -164,7 +165,28 @@ function App() {
       return <Weather onBack={navigateToDashboard} t={t} />;
     }
     if (currentPage === 'market') {
-      return <MarketPrice onBack={navigateToDashboard} t={t} />;
+      return (
+        <div style={{ backgroundColor: '#0a0e0a', minHeight: '100vh' }}>
+          <button 
+            onClick={navigateToDashboard}
+            style={{
+              position: 'fixed',
+              top: '20px',
+              left: '20px',
+              zIndex: 1000,
+              padding: '10px 20px',
+              backgroundColor: '#161b16',
+              color: '#22c55e',
+              border: '1px solid #2d362d',
+              borderRadius: '8px',
+              cursor: 'pointer'
+            }}
+          >
+            ← Back to Dashboard
+          </button>
+          <LiveMandi />
+        </div>
+      );
     }
     if (currentPage === 'global-market') {
       return <GlobalMarket onBack={navigateToDashboard} t={t} />;
