@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Home, 
   MessageSquare, 
@@ -8,7 +8,15 @@ import {
   Globe, 
   BarChart3, 
   MapPin, 
-  Building2
+  Building2,
+  Mic,
+  Send,
+  Loader2,
+  AlertTriangle,
+  TrendingUp,
+  ExternalLink,
+  ChevronRight,
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './GlobalMarket.css';
@@ -18,37 +26,37 @@ const GlobalMarketHome = ({ t }) => {
     {
       id: 1,
       crop: "Organic Turmeric",
-      country: "Germany",
-      industry: "Pharmaceutical",
-      volume: "High",
-      priceRange: "$2.5 - $3.8 / kg",
+      bestCountry: "Germany",
+      demandLevel: "High",
+      exportPrice: "₹280 - ₹350 / kg",
+      risk: "Low",
       verified: true
     },
     {
       id: 2,
-      crop: "Multani Mitti (Fuller's Earth)",
-      country: "UAE",
-      industry: "Cosmetic",
-      volume: "Medium",
-      priceRange: "$1.8 - $2.4 / kg",
+      crop: "Basmati Rice",
+      bestCountry: "UAE",
+      demandLevel: "High",
+      exportPrice: "₹110 - ₹145 / kg",
+      risk: "Medium",
       verified: true
     },
     {
       id: 3,
-      crop: "Basmati Rice",
-      country: "United Kingdom",
-      industry: "Food & Beverage",
-      volume: "High",
-      priceRange: "$1.2 - $1.6 / kg",
+      crop: "Alphonso Mango",
+      bestCountry: "USA",
+      demandLevel: "Medium",
+      exportPrice: "₹1800 - ₹2500 / box",
+      risk: "High",
       verified: true
     },
     {
       id: 4,
-      crop: "Alphonso Mangoes",
-      country: "USA",
-      industry: "Premium Fruit",
-      volume: "Medium",
-      priceRange: "$15 - $22 / box",
+      crop: "Onion",
+      bestCountry: "Malaysia",
+      demandLevel: "High",
+      exportPrice: "₹45 - ₹60 / kg",
+      risk: "Low",
       verified: true
     }
   ];
@@ -60,54 +68,44 @@ const GlobalMarketHome = ({ t }) => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      <div className="feed-header">
-        <h2>{t.demandFeed}</h2>
-        <p>{t.demandSubtitle}</p>
+      <div className="insights-header">
+        <TrendingUp size={20} className="text-green-500" />
+        <h2>Live AI Demand Insights</h2>
       </div>
       
-      {demandInsights.map((item, index) => (
-        <motion.div 
-          key={item.id}
-          className="demand-card"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.1 }}
-        >
-          <div className="demand-card-header">
-            <div className="verified-badge">
-              <CheckCircle size={14} />
-              <span>{t.verifiedDemand}</span>
-            </div>
-          </div>
-          
-          <div className="demand-card-body">
-            <div className="crop-info">
+      <div className="crop-insights-grid">
+        {demandInsights.map((item, index) => (
+          <motion.div 
+            key={item.id}
+            className="crop-insight-card glass-card"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+          >
+            <div className="insight-card-top">
               <h3>{item.crop}</h3>
-              <div className="region-info">
-                <MapPin size={16} />
-                <span>{item.country}</span>
+              <div className={`demand-indicator ${item.demandLevel.toLowerCase()}`}>
+                {item.demandLevel} Demand
               </div>
             </div>
             
-            <div className="stats-grid">
-              <div className="stat-item">
-                <span className="stat-label">{t.industry}</span>
-                <span className="stat-value">{item.industry}</span>
+            <div className="insight-details">
+              <div className="detail-row">
+                <Globe size={14} />
+                <span>Best Market: <strong>{item.bestCountry}</strong></span>
               </div>
-              <div className="stat-item">
-                <span className="stat-label">{t.demandVolume}</span>
-                <span className={`volume-tag ${item.volume.toLowerCase()}`}>
-                  {item.volume}
-                </span>
+              <div className="detail-row">
+                <TrendingUp size={14} />
+                <span>Est. Price: <strong className="price-text">{item.exportPrice}</strong></span>
               </div>
-              <div className="stat-item">
-                <span className="stat-label">{t.expPrice}</span>
-                <span className="stat-value price">{item.priceRange}</span>
+              <div className="detail-row">
+                <AlertTriangle size={14} />
+                <span>Risk: <strong className={`risk-${item.risk.toLowerCase()}`}>{item.risk}</strong></span>
               </div>
             </div>
-          </div>
-        </motion.div>
-      ))}
+          </motion.div>
+        ))}
+      </div>
     </motion.div>
   );
 };
@@ -119,8 +117,9 @@ const GlobalMarketPosts = ({ t }) => {
       company: "Indo-Euro Logistics",
       crop: "Dehydrated Onion Powder",
       quantity: "50 Metric Tons",
-      region: "Maharashtra / Gujarat",
-      description: "Looking for verified farmers who can provide consistent quality onion powder. We handle all export documentation and global shipping.",
+      destination: "Netherlands",
+      priceRange: "₹120 - ₹150 / kg",
+      description: "Looking for verified farmers who can provide consistent quality onion powder. We handle all export documentation.",
       time: "2h ago"
     },
     {
@@ -128,7 +127,8 @@ const GlobalMarketPosts = ({ t }) => {
       company: "Gulf Food Partners",
       crop: "Green Chilies (G4 Variety)",
       quantity: "10 Tons / Weekly",
-      region: "South India",
+      destination: "Dubai, UAE",
+      priceRange: "₹85 - ₹110 / kg",
       description: "Immediate requirement for export-grade green chilies. Weekly procurement cycle. Premium rates for GLOBALGAP certified farms.",
       time: "5h ago"
     }
@@ -144,46 +144,41 @@ const GlobalMarketPosts = ({ t }) => {
       {posts.map((post, index) => (
         <motion.div 
           key={post.id}
-          className="post-card"
+          className="post-card glass-card"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.1 }}
         >
           <div className="post-header">
-            <div className="company-logo">
-              <Building2 size={24} />
-            </div>
             <div className="company-info">
-              <div className="company-name">
+              <Building2 size={24} className="text-green-500" />
+              <div>
                 <h4>{post.company}</h4>
-                <CheckCircle size={14} className="verified-icon" />
+                <span className="post-time">{post.time}</span>
               </div>
-              <span className="post-time">{post.time}</span>
             </div>
+            <CheckCircle size={18} className="text-green-500" />
           </div>
           
-          <div className="post-content">
-            <div className="post-requirement">
-              <span className="req-label">{t.required}:</span>
-              <span className="req-value">{post.crop}</span>
+          <div className="post-body">
+            <div className="post-meta">
+              <div className="meta-tag">📦 {post.crop}</div>
+              <div className="meta-tag">🌍 {post.destination}</div>
             </div>
             <p className="post-desc">{post.description}</p>
-            
-            <div className="post-details">
-              <div className="detail">
-                <BarChart3 size={16} />
-                <span>{post.quantity}</span>
+            <div className="post-economics">
+              <div>
+                <span className="label">Quantity:</span>
+                <span className="value">{post.quantity}</span>
               </div>
-              <div className="detail">
-                <MapPin size={16} />
-                <span>{post.region}</span>
+              <div>
+                <span className="label">Expected Price:</span>
+                <span className="value text-green-400">{post.priceRange}</span>
               </div>
             </div>
           </div>
           
-          <div className="post-actions">
-            <button className="interest-btn">{t.interestedBtn}</button>
-          </div>
+          <button className="interest-btn">Interested (Mediated)</button>
         </motion.div>
       ))}
     </motion.div>
@@ -191,36 +186,11 @@ const GlobalMarketPosts = ({ t }) => {
 };
 
 const GlobalMarketNotifications = ({ t }) => {
-  const notifications = {
-    today: [
-      {
-        id: 1,
-        text: "New export demand for Turmeric from Europe",
-        time: "10:30 AM",
-        isNew: true
-      },
-      {
-        id: 2,
-        text: "Verified Partner: Gulf Food Partners posted a new requirement",
-        time: "08:15 AM",
-        isNew: true
-      }
-    ],
-    thisWeek: [
-      {
-        id: 3,
-        text: "High demand for Multani Mitti this month in UAE",
-        time: "Yesterday",
-        isNew: false
-      },
-      {
-        id: 4,
-        text: "Monthly Market Insight: Export prices for Basmati Rice increased by 5%",
-        time: "2 days ago",
-        isNew: false
-      }
-    ]
-  };
+  const notifications = [
+    { id: 1, text: "UAE me Haldi ki demand badh rahi hai", time: "10:30 AM", type: 'trend' },
+    { id: 2, text: "Bangladesh ne onion import band kiya", time: "08:15 AM", type: 'news' },
+    { id: 3, text: "Export price local mandi se 70% zyada hai", time: "Yesterday", type: 'insight' }
+  ];
 
   return (
     <motion.div 
@@ -229,42 +199,137 @@ const GlobalMarketNotifications = ({ t }) => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      <div className="notif-section">
-        <h3>{t.today}</h3>
-        {notifications.today.map((notif) => (
-          <div key={notif.id} className={`notif-item ${notif.isNew ? 'new' : ''}`}>
-            <div className="notif-icon">
-              <Bell size={18} />
-            </div>
-            <div className="notif-text">
-              <p>{notif.text}</p>
-              <span>{notif.time}</span>
-            </div>
-            {notif.isNew && <div className="new-dot"></div>}
+      {notifications.map((notif) => (
+        <div key={notif.id} className="notif-item glass-card">
+          <div className="notif-icon">
+            <Bell size={18} className="text-green-500" />
           </div>
-        ))}
-      </div>
-
-      <div className="notif-section">
-        <h3>{t.thisWeek}</h3>
-        {notifications.thisWeek.map((notif) => (
-          <div key={notif.id} className="notif-item">
-            <div className="notif-icon">
-              <Bell size={18} />
-            </div>
-            <div className="notif-text">
-              <p>{notif.text}</p>
-              <span>{notif.time}</span>
-            </div>
+          <div className="notif-content">
+            <p>{notif.text}</p>
+            <span>{notif.time}</span>
           </div>
-        ))}
-      </div>
+          <ChevronRight size={16} className="text-gray-500" />
+        </div>
+      ))}
     </motion.div>
   );
 };
 
-const GlobalMarket = ({ onBack, t }) => {
+const GlobalMarket = ({ onBack, t, currentLanguage, farmerName, locationData }) => {
   const [activeTab, setActiveTab] = useState('home');
+  const [isRecording, setIsRecording] = useState(false);
+  const [isThinking, setIsThinking] = useState(false);
+  const [voiceResult, setVoiceResult] = useState(null);
+  const recognitionRef = useRef(null);
+  const synthRef = window.speechSynthesis;
+
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      
+      recognitionRef.current.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        console.log("Voice captured:", transcript);
+        handleVoiceQuery(transcript);
+        setIsRecording(false);
+      };
+
+      recognitionRef.current.onerror = (event) => {
+        console.error("Speech recognition error:", event.error);
+        setIsRecording(false);
+      };
+      
+      recognitionRef.current.onend = () => {
+        console.log("Speech recognition ended");
+        setIsRecording(false);
+      };
+    }
+  }, [currentLanguage, locationData]); // Added locationData as dependency
+
+  const speak = (text) => {
+    if (synthRef.speaking) synthRef.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = currentLanguage === 'hi' ? 'hi-IN' : 'en-IN';
+    synthRef.speak(utterance);
+  };
+
+  const startRecording = () => {
+    if (recognitionRef.current) {
+      setIsRecording(true);
+      recognitionRef.current.lang = currentLanguage === 'hi' ? 'hi-IN' : 'en-US';
+      recognitionRef.current.start();
+    }
+  };
+
+  const handleVoiceQuery = async (query) => {
+    console.log("Processing voice query:", query);
+    setIsThinking(true);
+    setVoiceResult(null);
+
+    const apiKey = process.env.REACT_APP_GEMINI_API_KEY;
+    console.log("API Key present:", !!apiKey);
+
+    if (apiKey) {
+      try {
+        const prompt = `You are a Global Market Access AI Assistant for Indian farmers.
+        User Query: "${query}"
+        Location: ${locationData?.village || 'Unknown'}, ${locationData?.district || 'Unknown'}, ${locationData?.state || 'Unknown'}
+        Month: ${new Date().toLocaleString('default', { month: 'long' })}
+
+        Respond in simple Hinglish. 
+        MANDATORY STRUCTURE:
+        1. 🌍 Best Market Recommendation (Country & Reason)
+        2. 💰 Price Comparison (Local vs Export)
+        3. 🚚 Selling Method (Mandi vs Partner)
+        4. ⚠️ Risk Level (Low/Medium/High + Short explanation)
+        5. 🧭 Final Advice
+
+        Speak like a trusted advisor. No business jargon. Keep it concise but detailed.`;
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: prompt
+              }]
+            }]
+          })
+        });
+
+        const data = await response.json();
+        console.log("API Response data:", data);
+
+        if (data.error) {
+          throw new Error(data.error.message || "API Error");
+        }
+
+        if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0].text) {
+          const aiText = data.candidates[0].content.parts[0].text;
+          setVoiceResult({ text: aiText });
+          speak(aiText);
+        } else {
+          console.error("Unexpected API structure:", data);
+          throw new Error("Invalid API response structure");
+        }
+      } catch (error) {
+        console.error("Voice AI Error:", error);
+        const errorText = `Maaf kijiye, AI response me kuch takleef ho rahi hai: ${error.message}. Kripya thodi der baad koshish karein.`;
+        setVoiceResult({ text: errorText });
+        speak(errorText);
+      }
+    } else {
+      console.log("No API Key, using fallback");
+      const fallbackText = "Abhi Haldi ke liye UAE market bahut accha hai. Local mandi me ₹80 hai, export me ₹140 tak mil sakta hai. Aap hamare export partners ke zariye bech sakte hain. Risk Medium hai quality check ki wajah se. Advice: Agle 10 din me bechna behtar rahega.";
+      setVoiceResult({ text: fallbackText });
+      speak(fallbackText);
+    }
+    setIsThinking(false);
+  };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -276,47 +341,65 @@ const GlobalMarket = ({ onBack, t }) => {
   };
 
   return (
-    <div className="global-market-page">
-      <nav className="market-nav">
-        <button className="back-btn" onClick={onBack}>
-          <ArrowLeft size={24} />
-          <span>{t.dashboard}</span>
-        </button>
-        <div className="market-logo">
-          <Globe size={24} className="globe-icon" />
-          <h1>{t.marketAccessTitle}</h1>
+    <div className="global-market-page dark-theme">
+      {/* LinkedIn style top navigation */}
+      <div className="market-header-tabs glass-card">
+        <button className="back-btn" onClick={onBack}><ArrowLeft size={20} /></button>
+        <div className="nav-tabs">
+          <button className={`nav-tab ${activeTab === 'home' ? 'active' : ''}`} onClick={() => setActiveTab('home')}>
+            <Home size={20} />
+            <span>Home</span>
+          </button>
+          <button className={`nav-tab ${activeTab === 'posts' ? 'active' : ''}`} onClick={() => setActiveTab('posts')}>
+            <MessageSquare size={20} />
+            <span>Posts</span>
+          </button>
+          <button className={`nav-tab ${activeTab === 'notifications' ? 'active' : ''}`} onClick={() => setActiveTab('notifications')}>
+            <div className="icon-badge-wrapper">
+              <Bell size={20} />
+              <span className="notif-badge">3</span>
+            </div>
+            <span>Alerts</span>
+          </button>
         </div>
-      </nav>
+      </div>
 
-      <main className="market-main-content">
+      <main className="market-container">
         <AnimatePresence mode="wait">
           {renderContent()}
         </AnimatePresence>
       </main>
 
-      <div className="bottom-tabs">
-        <button 
-          className={`tab-item ${activeTab === 'home' ? 'active' : ''}`}
-          onClick={() => setActiveTab('home')}
+      {/* Floating AI Voice Assistant */}
+      <div className="voice-assistant-container">
+        <AnimatePresence>
+          {voiceResult && (
+            <motion.div 
+              className="ai-response-overlay glass-card"
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 50 }}
+            >
+              <div className="overlay-header">
+                <h3>AI Assistant Advice</h3>
+                <button onClick={() => setVoiceResult(null)} className="close-btn"><X size={20} /></button>
+              </div>
+              <div className="ai-text-output">
+                {voiceResult.text.split('\n').map((line, i) => <p key={i}>{line}</p>)}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <motion.button 
+          className={`floating-mic-btn ${isRecording ? 'recording' : ''}`}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={isRecording ? () => recognitionRef.current.stop() : startRecording}
         >
-          <Home size={22} />
-          <span>{t.marketHome}</span>
-        </button>
-        <button 
-          className={`tab-item ${activeTab === 'posts' ? 'active' : ''}`}
-          onClick={() => setActiveTab('posts')}
-        >
-          <MessageSquare size={22} />
-          <span>{t.marketPosts}</span>
-        </button>
-        <button 
-          className={`tab-item ${activeTab === 'notifications' ? 'active' : ''}`}
-          onClick={() => setActiveTab('notifications')}
-        >
-          <Bell size={22} />
-          <span className="notif-badge-pill">2</span>
-          <span>{t.marketAlerts}</span>
-        </button>
+          {isThinking ? <Loader2 className="animate-spin" /> : <Mic size={28} />}
+          {isRecording && <div className="mic-pulse"></div>}
+        </motion.button>
       </div>
     </div>
   );

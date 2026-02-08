@@ -6,6 +6,8 @@ import GlobalMarket from './GlobalMarket';
 import MarketPrice from './MarketPrice';
 import FarmMap from './FarmMap';
 import AIChatPage from './AIChatPage';
+import FarmerOnboarding from './FarmerOnboarding';
+import SeasonalAdvice from './SeasonalAdvice';
 import './App.css';
 
 function App() {
@@ -13,8 +15,9 @@ function App() {
     return localStorage.getItem('agriSetuLang') || 'en';
   });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentPage, setCurrentPage] = useState('login'); // 'login', 'dashboard', 'weather', 'market'
+  const [currentPage, setCurrentPage] = useState('login'); // 'login', 'onboarding', 'dashboard', 'weather', 'market', 'seasonal-advice'
   const [userName, setUserName] = useState('');
+  const [onboardingData, setOnboardingData] = useState(null);
   const [formData, setFormData] = useState({
     fullName: '',
     mobileNumber: '',
@@ -34,6 +37,7 @@ function App() {
     setIsLoggedIn(false);
     setCurrentPage('login');
     setUserName('');
+    setOnboardingData(null);
     setFormData({
       fullName: '',
       mobileNumber: '',
@@ -63,6 +67,10 @@ function App() {
 
   const navigateToAIChat = () => {
     setCurrentPage('ai-chat');
+  };
+
+  const navigateToSeasonalAdvice = () => {
+    setCurrentPage('seasonal-advice');
   };
 
   // Form validation
@@ -126,14 +134,19 @@ function App() {
     if (validateForm()) {
       setIsSubmitting(true);
       
-      // Simulate login success
+      // Simulate login success and move to onboarding
       setTimeout(() => {
         setUserName(formData.fullName);
-        setIsLoggedIn(true);
-        setCurrentPage('dashboard');
+        setCurrentPage('onboarding');
         setIsSubmitting(false);
       }, 1000);
     }
+  };
+
+  const handleOnboardingComplete = (data) => {
+    setOnboardingData(data);
+    setIsLoggedIn(true);
+    setCurrentPage('dashboard');
   };
 
   // Check if form is valid for button state
@@ -141,6 +154,10 @@ function App() {
                      formData.mobileNumber.trim() && 
                      /^\d{10}$/.test(formData.mobileNumber) && 
                      formData.termsAccepted;
+
+  if (currentPage === 'onboarding') {
+    return <FarmerOnboarding onComplete={handleOnboardingComplete} t={t} />;
+  }
 
   if (isLoggedIn) {
     if (currentPage === 'weather') {
@@ -153,10 +170,13 @@ function App() {
       return <GlobalMarket onBack={navigateToDashboard} t={t} />;
     }
     if (currentPage === 'farm-map') {
-      return <FarmMap onBack={navigateToDashboard} t={t} />;
+      return <FarmMap onBack={navigateToDashboard} t={t} currentLanguage={currentLanguage} farmerName={userName} />;
     }
     if (currentPage === 'ai-chat') {
       return <AIChatPage onBack={navigateToDashboard} t={t} currentLanguage={currentLanguage} farmerName={userName} />;
+    }
+    if (currentPage === 'seasonal-advice') {
+      return <SeasonalAdvice onBack={navigateToDashboard} locationData={onboardingData} t={t} />;
     }
     return (
       <Dashboard 
@@ -166,7 +186,9 @@ function App() {
         onNavigateToGlobalMarket={navigateToGlobalMarket}
         onNavigateToFarmMap={navigateToFarmMap}
         onNavigateToAIChat={navigateToAIChat}
+        onNavigateToSeasonalAdvice={navigateToSeasonalAdvice}
         farmerName={userName}
+        locationData={onboardingData}
         currentLanguage={currentLanguage}
         onLanguageChange={handleLanguageChange}
         t={t}

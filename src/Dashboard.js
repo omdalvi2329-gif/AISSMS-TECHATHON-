@@ -21,7 +21,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { languages } from './translations';
 import './Dashboard.css';
 
-const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNavigateToGlobalMarket, onNavigateToFarmMap, onNavigateToAIChat, farmerName, currentLanguage, onLanguageChange, t }) => {
+const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNavigateToGlobalMarket, onNavigateToFarmMap, onNavigateToAIChat, onNavigateToSeasonalAdvice, farmerName, currentLanguage, onLanguageChange, t }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLangOpen, setIsLangOpen] = useState(false);
 
@@ -58,7 +58,8 @@ const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNaviga
       title: t.seasonalAdvice,
       description: t.seasonalAdviceDesc,
       icon: <Calendar className="card-icon" />,
-      color: "#f59e0b"
+      color: "#f59e0b",
+      onClick: onNavigateToSeasonalAdvice
     },
     {
       id: 5,
