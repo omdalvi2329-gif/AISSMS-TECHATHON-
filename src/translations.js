@@ -39,8 +39,8 @@ export const translations = {
     globalMarketDesc: "Connect to export opportunities",
     seasonalAdvice: "Seasonal Advice",
     seasonalAdviceDesc: "Right crop, right season",
-    farmMap: "Farm Map",
-    farmMapDesc: "Monitor your fields via satellite",
+    farmerCommunity: "Farmer Community",
+    farmerCommunityDesc: "Village updates & crop rankings",
 
     // Weather Feature
     weatherTitle: "Weather Insights",
@@ -125,8 +125,8 @@ export const translations = {
     globalMarketDesc: "निर्यात के अवसरों से जुड़ें",
     seasonalAdvice: "मौसमी सलाह",
     seasonalAdviceDesc: "सही फसल, सही मौसम",
-    farmMap: "खेत का नक्शा",
-    farmMapDesc: "सैटेलाइट के जरिए अपने खेतों की निगरानी करें",
+    farmerCommunity: "किसान समुदाय",
+    farmerCommunityDesc: "गांव के अपडेट और फसल रैंकिंग",
 
     // Weather Feature
     weatherTitle: "मौसम की जानकारी",
@@ -211,8 +211,8 @@ export const translations = {
     globalMarketDesc: "निर्यात संधींशी कनेक्ट व्हा",
     seasonalAdvice: "मौसमी सल्ला",
     seasonalAdviceDesc: "योग्य पीक, योग्य हंगाम",
-    farmMap: "शेतीचा नकाशा",
-    farmMapDesc: "सॅटेलाइटद्वारे तुमच्या शेतावर लक्ष ठेवा",
+    farmerCommunity: "शेतकरी समुदाय",
+    farmerCommunityDesc: "गाव अपडेट आणि पीक रँकिंग",
 
     // Weather Feature
     weatherTitle: "हवामानाची माहिती",

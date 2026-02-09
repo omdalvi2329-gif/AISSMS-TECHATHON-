@@ -8,6 +8,7 @@
     "mapbox-gl": "^1.13.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-intersection-observer": "^10.0.2",
     "react-map-gl": "^5.3.21",
     "react-scripts": "5.0.1"
   },

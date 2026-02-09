@@ -3,12 +3,11 @@ import { translations, languages } from './translations';
 import Dashboard from './Dashboard';
 import Weather from './Weather';
 import GlobalMarket from './GlobalMarket';
-import MarketPrice from './MarketPrice';
-import FarmMap from './FarmMap';
 import AIChatPage from './AIChatPage';
 import FarmerOnboarding from './FarmerOnboarding';
 import SeasonalAdvice from './SeasonalAdvice';
 import LiveMandi from './LiveMandi';
+import FarmerCommunity from './FarmerCommunity';
 import './App.css';
 
 function App() {
@@ -33,6 +32,10 @@ function App() {
   };
 
   const t = translations[currentLanguage];
+
+  const navigateToCommunity = () => {
+    setCurrentPage('community');
+  };
 
   const handleLogout = () => {
     setIsLoggedIn(false);
@@ -60,10 +63,6 @@ function App() {
 
   const navigateToDashboard = () => {
     setCurrentPage('dashboard');
-  };
-
-  const navigateToFarmMap = () => {
-    setCurrentPage('farm-map');
   };
 
   const navigateToAIChat = () => {
@@ -191,8 +190,8 @@ function App() {
     if (currentPage === 'global-market') {
       return <GlobalMarket onBack={navigateToDashboard} t={t} />;
     }
-    if (currentPage === 'farm-map') {
-      return <FarmMap onBack={navigateToDashboard} t={t} currentLanguage={currentLanguage} farmerName={userName} />;
+    if (currentPage === 'community') {
+      return <FarmerCommunity onBack={navigateToDashboard} farmerName={userName} />;
     }
     if (currentPage === 'ai-chat') {
       return <AIChatPage onBack={navigateToDashboard} t={t} currentLanguage={currentLanguage} farmerName={userName} />;
@@ -206,7 +205,7 @@ function App() {
         onNavigateToWeather={navigateToWeather} 
         onNavigateToMarket={navigateToMarket} 
         onNavigateToGlobalMarket={navigateToGlobalMarket}
-        onNavigateToFarmMap={navigateToFarmMap}
+        onNavigateToCommunity={navigateToCommunity}
         onNavigateToAIChat={navigateToAIChat}
         onNavigateToSeasonalAdvice={navigateToSeasonalAdvice}
         farmerName={userName}
