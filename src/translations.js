@@ -13,14 +13,19 @@ export const translations = {
     mobileDigits: "Please enter a valid mobile number",
     termsRequired: "Please accept the terms and conditions",
     
-    // Sidebar & Navigation
-    dashboard: "Dashboard",
-    profile: "Farmer Profile",
-    settings: "Settings",
-    language: "Language",
-    logout: "Logout",
-    premiumFarmer: "Premium Farmer",
-    backToDashboard: "Back to Dashboard",
+    // Farmer Profile Sidebar
+    myProfile: "My Profile",
+    dailyUpdates: "My Daily Updates",
+    villageRanking: "Village Ranking",
+    langVoice: "Language & Voice",
+    voiceAssistant: "Voice Assistant",
+    voiceHelper: "Aap bolkar bhi app chala sakte ho",
+    cropsTracked: "Crops Tracked",
+    villageRank: "Village Rank",
+    aiRating: "AI Rating",
+    villageLocation: "Pune, Maharashtra",
+    on: "ON",
+    off: "OFF",
 
     // Dashboard - AI Chatbot
     aiAssistant: "AI Farming Assistant",
@@ -104,14 +109,19 @@ export const translations = {
     mobileDigits: "कृपया एक वैध मोबाइल नंबर दर्ज करें",
     termsRequired: "कृपया नियम और शर्तें स्वीकार करें",
     
-    // Sidebar & Navigation
-    dashboard: "डैशबोर्ड",
-    profile: "किसान प्रोफ़ाइल",
-    settings: "सेटिंग्स",
-    language: "भाषा",
-    logout: "लॉग आउट",
-    premiumFarmer: "प्रीमियम किसान",
-    backToDashboard: "डैशबोर्ड पर वापस जाएं",
+    // Farmer Profile Sidebar
+    myProfile: "मेरी प्रोफाइल",
+    dailyUpdates: "मेरे दैनिक अपडेट",
+    villageRanking: "गांव रैंकिंग",
+    langVoice: "भाषा और आवाज",
+    voiceAssistant: "वॉयस असिस्टेंट",
+    voiceHelper: "आप बोलकर भी ऐप चला सकते हैं",
+    cropsTracked: "ट्रैक की गई फसलें",
+    villageRank: "गांव रैंक",
+    aiRating: "AI रेटिंग",
+    villageLocation: "पुणे, महाराष्ट्र",
+    on: "चालू",
+    off: "बंद",
 
     // Dashboard - AI Chatbot
     aiAssistant: "AI खेती सहायक",
@@ -195,14 +205,19 @@ export const translations = {
     mobileDigits: "कृपया वैध मोबाइल नंबर प्रविष्ट करा",
     termsRequired: "कृपया नियम आणि अटी स्वीकारा",
     
-    // Sidebar & Navigation
-    dashboard: "डॅशबोर्ड",
-    profile: "शेतकरी प्रोफाइल",
-    settings: "सेटिंग्ज",
-    language: "भाषा",
-    logout: "लॉग आउट",
-    premiumFarmer: "प्रीमियम शेतकरी",
-    backToDashboard: "डॅशबोर्डवर परत जा",
+    // Farmer Profile Sidebar
+    myProfile: "माझी प्रोफाइल",
+    dailyUpdates: "माझे दैनिक अपडेट",
+    villageRanking: "गाव रँकिंग",
+    langVoice: "भाषा आणि आवाज",
+    voiceAssistant: "व्हॉइस असिस्टंट",
+    voiceHelper: "तुम्ही बोलून देखील ॲप चालवू शकता",
+    cropsTracked: "ट्रॅक केलेली पिके",
+    villageRank: "गाव रँक",
+    aiRating: "AI रँकिंग",
+    villageLocation: "पुणे, महाराष्ट्र",
+    on: "चालू",
+    off: "बंद",
 
     // Dashboard - AI Chatbot
     aiAssistant: "AI शेती सहाय्यक",

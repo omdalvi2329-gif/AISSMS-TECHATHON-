@@ -29,6 +29,7 @@ const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNaviga
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [suggestionIndex, setSuggestionIndex] = useState(0);
+  const [voiceAssistant, setVoiceAssistant] = useState(true);
 
   const suggestions = [
     "Aaj cotton ke liye pani dena sahi rahega?",
@@ -160,7 +161,7 @@ const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNaviga
         </div>
       </nav>
 
-      {/* Sidebar Sidebar */}
+      {/* Sidebar */}
       <AnimatePresence>
         {isSidebarOpen && (
           <>
@@ -178,34 +179,99 @@ const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNaviga
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             >
-              <div className="sidebar-header">
-                <div className="profile-section">
-                  <div className="profile-avatar">
-                    <User size={32} />
-                  </div>
-                  <div className="profile-info">
-                    <h3>{farmerName || t.farmerLogin}</h3>
-                    <p>{t.premiumFarmer}</p>
-                  </div>
-                </div>
-                <button className="icon-button close-btn" onClick={() => setIsSidebarOpen(false)}>
+              <div className="sidebar-header-new">
+                <button className="close-sidebar-btn" onClick={() => setIsSidebarOpen(false)}>
                   <X size={24} />
                 </button>
+                <div className="sidebar-profile-header">
+                  <div className="sidebar-avatar-large">
+                    <User size={40} />
+                  </div>
+                  <div className="sidebar-profile-text">
+                    <h3>{farmerName || "Farmer"}</h3>
+                    <span className="premium-badge-sidebar">Premium Farmer 🌾</span>
+                    <p className="village-text-sidebar">📍 {t.villageLocation}</p>
+                  </div>
+                </div>
               </div>
 
-              <div className="sidebar-content">
-                {sidebarItems.map((item, index) => (
-                  <button key={index} className="sidebar-item">
-                    {item.icon}
-                    <span>{item.label}</span>
-                  </button>
-                ))}
-                <div className="sidebar-divider"></div>
-                <button className="sidebar-item logout" onClick={onLogout}>
+              <div className="sidebar-stats-row">
+                <div className="stat-item">
+                  <span className="stat-value">3</span>
+                  <span className="stat-label">{t.cropsTracked}</span>
+                </div>
+                <div className="stat-divider"></div>
+                <div className="stat-item">
+                  <span className="stat-value">#4</span>
+                  <span className="stat-label">{t.villageRank}</span>
+                </div>
+                <div className="stat-divider"></div>
+                <div className="stat-item">
+                  <span className="stat-value">4.5</span>
+                  <span className="stat-label">{t.aiRating}</span>
+                </div>
+              </div>
+
+              <nav className="sidebar-menu-new">
+                <button className="menu-row-item">
+                  <User size={20} />
+                  <span>{t.myProfile}</span>
+                </button>
+                <button className="menu-row-item" onClick={() => { onNavigateToCommunity(); setIsSidebarOpen(false); }}>
+                  <TrendingUp size={20} />
+                  <span>{t.dailyUpdates}</span>
+                </button>
+                <button className="menu-row-item" onClick={() => { onNavigateToCommunity(); setIsSidebarOpen(false); }}>
+                  <Award size={20} />
+                  <span>{t.villageRanking}</span>
+                </button>
+                
+                <div className="menu-section-divider"></div>
+
+                <div className="language-voice-section">
+                  <div className="section-label-row">
+                    <Globe size={18} />
+                    <span>{t.langVoice}</span>
+                  </div>
+                  
+                  <div className="lang-buttons-grid">
+                    {languages.map((lang) => (
+                      <button 
+                        key={lang.code}
+                        className={`lang-mini-btn ${currentLanguage === lang.code ? 'active' : ''}`}
+                        onClick={() => onLanguageChange(lang.code)}
+                      >
+                        {lang.name}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="voice-toggle-row">
+                    <div className="voice-info">
+                      <span>{t.voiceAssistant}</span>
+                      <p>{t.voiceHelper}</p>
+                    </div>
+                    <button 
+                      className={`toggle-switch ${voiceAssistant ? 'on' : 'off'}`}
+                      onClick={() => setVoiceAssistant(!voiceAssistant)}
+                    >
+                      <div className="toggle-knob"></div>
+                      <span className="toggle-text">{voiceAssistant ? t.on : t.off}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="menu-section-divider"></div>
+
+                <button className="menu-row-item">
+                  <SettingsIcon size={20} />
+                  <span>{t.settings}</span>
+                </button>
+                <button className="menu-row-item logout" onClick={onLogout}>
                   <LogOut size={20} />
                   <span>{t.logout}</span>
                 </button>
-              </div>
+              </nav>
             </motion.aside>
           </>
         )}
