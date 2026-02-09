@@ -166,138 +166,61 @@ const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNaviga
         {isSidebarOpen && (
           <>
             <motion.div 
-              className="sidebar-overlay-premium"
+              className="sidebar-overlay-modern"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsSidebarOpen(false)}
             />
             <motion.aside 
-              className="sidebar-drawer-premium"
-              initial={{ x: '-100%', opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: '-100%', opacity: 0 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200, duration: 0.3 }}
+              className="sidebar-drawer-modern"
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'tween', duration: 0.3, ease: 'easeOut' }}
             >
-              <div className="drawer-content-wrapper">
-                {/* Profile Card Section */}
-                <div className="drawer-profile-card">
-                  <button className="drawer-close-btn" onClick={() => setIsSidebarOpen(false)}>
+              <div className="drawer-container-modern">
+                {/* Header */}
+                <div className="drawer-header-modern">
+                  <div className="profile-group-modern">
+                    <div className="avatar-container-modern">
+                      <div className="avatar-glow-modern"></div>
+                      <div className="avatar-circle-modern">
+                        <User size={28} color="#22c55e" />
+                      </div>
+                    </div>
+                    <div className="profile-text-modern">
+                      <h3 className="profile-name-modern">Rahul Sharma</h3>
+                      <span className="profile-badge-modern">Premium Farmer</span>
+                    </div>
+                  </div>
+                  <button className="close-btn-modern" onClick={() => setIsSidebarOpen(false)}>
                     <X size={20} />
                   </button>
-                  <div className="profile-avatar-wrapper">
-                    <div className="profile-avatar-glow"></div>
-                    <div className="profile-avatar-inner">
-                      <User size={48} strokeWidth={1.5} />
-                    </div>
-                  </div>
-                  <div className="profile-info-premium">
-                    <h2>{farmerName || "Om Dalvi"}</h2>
-                    <div className="premium-badge-gold">
-                      <span>Premium Farmer 🌾</span>
-                    </div>
-                    <p className="profile-location">
-                      <Globe size={14} /> Pune, Maharashtra
-                    </p>
-                  </div>
                 </div>
 
-                {/* Profile Stats Section */}
-                <div className="profile-stats-chips">
-                  <motion.div className="stat-chip" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <span className="chip-icon">🌱</span>
-                    <span className="chip-text">3 Crops</span>
-                  </motion.div>
-                  <motion.div className="stat-chip" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <span className="chip-icon">🏆</span>
-                    <span className="chip-text">Rank #4</span>
-                  </motion.div>
-                  <motion.div className="stat-chip" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <span className="chip-icon">⭐</span>
-                    <span className="chip-text">4.5 Rating</span>
-                  </motion.div>
-                </div>
-
-                {/* Action Menu Section */}
-                <nav className="drawer-nav-menu">
-                  <div className="menu-group">
-                    <button className="menu-card-item">
-                      <div className="menu-item-left">
-                        <User size={20} className="menu-icon" />
-                        <span>{t.myProfile}</span>
-                      </div>
-                      <ChevronRight size={16} className="menu-arrow" />
-                    </button>
-                    <button className="menu-card-item" onClick={() => { onNavigateToCommunity(); setIsSidebarOpen(false); }}>
-                      <div className="menu-item-left">
-                        <TrendingUp size={20} className="menu-icon" />
-                        <span>{t.dailyUpdates}</span>
-                      </div>
-                      <ChevronRight size={16} className="menu-arrow" />
-                    </button>
-                    <button className="menu-card-item" onClick={() => { onNavigateToCommunity(); setIsSidebarOpen(false); }}>
-                      <div className="menu-item-left">
-                        <Award size={20} className="menu-icon" />
-                        <span>{t.villageRanking}</span>
-                      </div>
-                      <ChevronRight size={16} className="menu-arrow" />
-                    </button>
-                    <button className="menu-card-item">
-                      <div className="menu-item-left">
-                        <Sparkles size={20} className="menu-icon" />
-                        <span>AI Insights</span>
-                      </div>
-                      <div className="new-dot"></div>
-                    </button>
-                    <button className="menu-card-item">
-                      <div className="menu-item-left">
-                        <SettingsIcon size={20} className="menu-icon" />
-                        <span>{t.settings}</span>
-                      </div>
-                      <ChevronRight size={16} className="menu-arrow" />
-                    </button>
-                  </div>
-
-                  {/* Language & Voice Section */}
-                  <div className="drawer-divider-text">🌐 {t.langVoice}</div>
-                  <div className="language-selector-pills">
-                    {languages.map((lang) => (
-                      <button 
-                        key={lang.code}
-                        className={`lang-pill-btn ${currentLanguage === lang.code ? 'active' : ''}`}
-                        onClick={() => onLanguageChange(lang.code)}
-                      >
-                        {lang.name}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="voice-assistant-premium">
-                    <div className="voice-top-row">
-                      <div className="voice-label-group">
-                        <Mic size={20} className={voiceAssistant ? "mic-active" : ""} />
-                        <div className="voice-text-group">
-                          <span className="voice-status">Voice Assistant {voiceAssistant ? 'ON' : 'OFF'}</span>
-                        </div>
-                      </div>
-                      <button 
-                        className={`premium-toggle ${voiceAssistant ? 'active' : ''}`}
-                        onClick={() => setVoiceAssistant(!voiceAssistant)}
-                      >
-                        <div className="toggle-handle"></div>
-                      </button>
-                    </div>
-                    <p className="voice-helper-text">"Aap bolkar bhi app chala sakte ho 🎤"</p>
-                  </div>
-                </nav>
-
-                {/* Logout Section */}
-                <div className="drawer-footer">
-                  <button className="logout-btn-premium" onClick={onLogout}>
-                    <LogOut size={20} />
-                    <span>{t.logout}</span>
+                {/* Navigation Menu */}
+                <nav className="drawer-nav-modern">
+                  <button className="nav-item-modern">
+                    <User size={20} className="nav-icon-modern" />
+                    <span>Farmer Profile</span>
                   </button>
-                </div>
+                  <button className="nav-item-modern">
+                    <SettingsIcon size={20} className="nav-icon-modern" />
+                    <span>Settings</span>
+                  </button>
+                  <button className="nav-item-modern">
+                    <Globe size={20} className="nav-icon-modern" />
+                    <span>Language</span>
+                  </button>
+
+                  <div className="drawer-divider-modern"></div>
+
+                  <button className="nav-item-modern logout-item-modern" onClick={onLogout}>
+                    <LogOut size={20} className="nav-icon-modern" />
+                    <span>Logout</span>
+                  </button>
+                </nav>
               </div>
             </motion.aside>
           </>

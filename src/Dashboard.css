@@ -20,6 +20,180 @@
   border-bottom: 1px solid rgba(45, 54, 45, 0.5);
 }
 
+/* Premium Sidebar Drawer Redesign - Modern Black/Green */
+.sidebar-overlay-modern {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  z-index: 2000;
+}
+
+.sidebar-drawer-modern {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 340px;
+  background: #0B0F0C;
+  border-right: 1px solid rgba(34, 197, 94, 0.1);
+  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
+  z-index: 2001;
+  overflow: hidden;
+}
+
+.drawer-container-modern {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: linear-gradient(135deg, #0B0F0C 0%, #0d1a0d 100%);
+}
+
+.drawer-header-modern {
+  padding: 3rem 1.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  position: relative;
+}
+
+.profile-group-modern {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.avatar-container-modern {
+  position: relative;
+  width: 60px;
+  height: 60px;
+}
+
+.avatar-circle-modern {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1.5px solid #22c55e;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.avatar-glow-modern {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #22c55e;
+  border-radius: 50%;
+  filter: blur(12px);
+  opacity: 0.3;
+  animation: pulse-avatar-glow 2s infinite;
+}
+
+.profile-text-modern h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #fff;
+  font-weight: 700;
+}
+
+.profile-badge-modern {
+  font-size: 0.85rem;
+  color: #22c55e;
+  font-weight: 500;
+  display: block;
+  margin-top: 0.2rem;
+}
+
+.close-btn-modern {
+  background: none;
+  border: none;
+  color: #22c55e;
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: all 0.3s;
+  opacity: 0.7;
+}
+
+.close-btn-modern:hover {
+  opacity: 1;
+  filter: drop-shadow(0 0 5px #22c55e);
+  transform: rotate(90deg);
+}
+
+.drawer-nav-modern {
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.nav-item-modern {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 1rem 1.2rem;
+  background: none;
+  border: none;
+  color: #888;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-align: left;
+}
+
+.nav-item-modern span {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.nav-icon-modern {
+  color: #22c55e;
+  transition: all 0.3s;
+}
+
+.nav-item-modern:hover {
+  background: rgba(34, 197, 94, 0.08);
+  color: #fff;
+  transform: translateX(8px);
+}
+
+.drawer-divider-modern {
+  height: 1px;
+  background: rgba(34, 197, 94, 0.1);
+  margin: 1.5rem 1rem;
+}
+
+.logout-item-modern {
+  margin-top: auto;
+  color: #ef4444 !important;
+}
+
+.logout-item-modern .nav-icon-modern {
+  color: #ef4444;
+}
+
+.logout-item-modern:hover {
+  background: rgba(239, 68, 68, 0.08) !important;
+  color: #ef4444 !important;
+  filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.2));
+}
+
+@keyframes pulse-avatar-glow {
+  0% { transform: scale(0.9); opacity: 0.2; }
+  50% { transform: scale(1.1); opacity: 0.4; }
+  100% { transform: scale(0.9); opacity: 0.2; }
+}
+
 /* Hero Section Enhancements */
 .hero-banner {
   position: relative;
