@@ -161,84 +161,110 @@ const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNaviga
         </div>
       </nav>
 
-      {/* Sidebar */}
+      {/* Sidebar Drawer */}
       <AnimatePresence>
         {isSidebarOpen && (
           <>
             <motion.div 
-              className="sidebar-overlay"
+              className="sidebar-overlay-premium"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsSidebarOpen(false)}
             />
             <motion.aside 
-              className="sidebar"
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="sidebar-drawer-premium"
+              initial={{ x: '-100%', opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: '-100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200, duration: 0.3 }}
             >
-              <div className="sidebar-header-new">
-                <button className="close-sidebar-btn" onClick={() => setIsSidebarOpen(false)}>
-                  <X size={24} />
-                </button>
-                <div className="sidebar-profile-header">
-                  <div className="sidebar-avatar-large">
-                    <User size={40} />
+              <div className="drawer-content-wrapper">
+                {/* Profile Card Section */}
+                <div className="drawer-profile-card">
+                  <button className="drawer-close-btn" onClick={() => setIsSidebarOpen(false)}>
+                    <X size={20} />
+                  </button>
+                  <div className="profile-avatar-wrapper">
+                    <div className="profile-avatar-glow"></div>
+                    <div className="profile-avatar-inner">
+                      <User size={48} strokeWidth={1.5} />
+                    </div>
                   </div>
-                  <div className="sidebar-profile-text">
-                    <h3>{farmerName || "Farmer"}</h3>
-                    <span className="premium-badge-sidebar">Premium Farmer 🌾</span>
-                    <p className="village-text-sidebar">📍 {t.villageLocation}</p>
+                  <div className="profile-info-premium">
+                    <h2>{farmerName || "Om Dalvi"}</h2>
+                    <div className="premium-badge-gold">
+                      <span>Premium Farmer 🌾</span>
+                    </div>
+                    <p className="profile-location">
+                      <Globe size={14} /> Pune, Maharashtra
+                    </p>
                   </div>
                 </div>
-              </div>
 
-              <div className="sidebar-stats-row">
-                <div className="stat-item">
-                  <span className="stat-value">3</span>
-                  <span className="stat-label">{t.cropsTracked}</span>
+                {/* Profile Stats Section */}
+                <div className="profile-stats-chips">
+                  <motion.div className="stat-chip" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <span className="chip-icon">🌱</span>
+                    <span className="chip-text">3 Crops</span>
+                  </motion.div>
+                  <motion.div className="stat-chip" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <span className="chip-icon">🏆</span>
+                    <span className="chip-text">Rank #4</span>
+                  </motion.div>
+                  <motion.div className="stat-chip" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <span className="chip-icon">⭐</span>
+                    <span className="chip-text">4.5 Rating</span>
+                  </motion.div>
                 </div>
-                <div className="stat-divider"></div>
-                <div className="stat-item">
-                  <span className="stat-value">#4</span>
-                  <span className="stat-label">{t.villageRank}</span>
-                </div>
-                <div className="stat-divider"></div>
-                <div className="stat-item">
-                  <span className="stat-value">4.5</span>
-                  <span className="stat-label">{t.aiRating}</span>
-                </div>
-              </div>
 
-              <nav className="sidebar-menu-new">
-                <button className="menu-row-item">
-                  <User size={20} />
-                  <span>{t.myProfile}</span>
-                </button>
-                <button className="menu-row-item" onClick={() => { onNavigateToCommunity(); setIsSidebarOpen(false); }}>
-                  <TrendingUp size={20} />
-                  <span>{t.dailyUpdates}</span>
-                </button>
-                <button className="menu-row-item" onClick={() => { onNavigateToCommunity(); setIsSidebarOpen(false); }}>
-                  <Award size={20} />
-                  <span>{t.villageRanking}</span>
-                </button>
-                
-                <div className="menu-section-divider"></div>
-
-                <div className="language-voice-section">
-                  <div className="section-label-row">
-                    <Globe size={18} />
-                    <span>{t.langVoice}</span>
+                {/* Action Menu Section */}
+                <nav className="drawer-nav-menu">
+                  <div className="menu-group">
+                    <button className="menu-card-item">
+                      <div className="menu-item-left">
+                        <User size={20} className="menu-icon" />
+                        <span>{t.myProfile}</span>
+                      </div>
+                      <ChevronRight size={16} className="menu-arrow" />
+                    </button>
+                    <button className="menu-card-item" onClick={() => { onNavigateToCommunity(); setIsSidebarOpen(false); }}>
+                      <div className="menu-item-left">
+                        <TrendingUp size={20} className="menu-icon" />
+                        <span>{t.dailyUpdates}</span>
+                      </div>
+                      <ChevronRight size={16} className="menu-arrow" />
+                    </button>
+                    <button className="menu-card-item" onClick={() => { onNavigateToCommunity(); setIsSidebarOpen(false); }}>
+                      <div className="menu-item-left">
+                        <Award size={20} className="menu-icon" />
+                        <span>{t.villageRanking}</span>
+                      </div>
+                      <ChevronRight size={16} className="menu-arrow" />
+                    </button>
+                    <button className="menu-card-item">
+                      <div className="menu-item-left">
+                        <Sparkles size={20} className="menu-icon" />
+                        <span>AI Insights</span>
+                      </div>
+                      <div className="new-dot"></div>
+                    </button>
+                    <button className="menu-card-item">
+                      <div className="menu-item-left">
+                        <SettingsIcon size={20} className="menu-icon" />
+                        <span>{t.settings}</span>
+                      </div>
+                      <ChevronRight size={16} className="menu-arrow" />
+                    </button>
                   </div>
-                  
-                  <div className="lang-buttons-grid">
+
+                  {/* Language & Voice Section */}
+                  <div className="drawer-divider-text">🌐 {t.langVoice}</div>
+                  <div className="language-selector-pills">
                     {languages.map((lang) => (
                       <button 
                         key={lang.code}
-                        className={`lang-mini-btn ${currentLanguage === lang.code ? 'active' : ''}`}
+                        className={`lang-pill-btn ${currentLanguage === lang.code ? 'active' : ''}`}
                         onClick={() => onLanguageChange(lang.code)}
                       >
                         {lang.name}
@@ -246,32 +272,33 @@ const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNaviga
                     ))}
                   </div>
 
-                  <div className="voice-toggle-row">
-                    <div className="voice-info">
-                      <span>{t.voiceAssistant}</span>
-                      <p>{t.voiceHelper}</p>
+                  <div className="voice-assistant-premium">
+                    <div className="voice-top-row">
+                      <div className="voice-label-group">
+                        <Mic size={20} className={voiceAssistant ? "mic-active" : ""} />
+                        <div className="voice-text-group">
+                          <span className="voice-status">Voice Assistant {voiceAssistant ? 'ON' : 'OFF'}</span>
+                        </div>
+                      </div>
+                      <button 
+                        className={`premium-toggle ${voiceAssistant ? 'active' : ''}`}
+                        onClick={() => setVoiceAssistant(!voiceAssistant)}
+                      >
+                        <div className="toggle-handle"></div>
+                      </button>
                     </div>
-                    <button 
-                      className={`toggle-switch ${voiceAssistant ? 'on' : 'off'}`}
-                      onClick={() => setVoiceAssistant(!voiceAssistant)}
-                    >
-                      <div className="toggle-knob"></div>
-                      <span className="toggle-text">{voiceAssistant ? t.on : t.off}</span>
-                    </button>
+                    <p className="voice-helper-text">"Aap bolkar bhi app chala sakte ho 🎤"</p>
                   </div>
+                </nav>
+
+                {/* Logout Section */}
+                <div className="drawer-footer">
+                  <button className="logout-btn-premium" onClick={onLogout}>
+                    <LogOut size={20} />
+                    <span>{t.logout}</span>
+                  </button>
                 </div>
-
-                <div className="menu-section-divider"></div>
-
-                <button className="menu-row-item">
-                  <SettingsIcon size={20} />
-                  <span>{t.settings}</span>
-                </button>
-                <button className="menu-row-item logout" onClick={onLogout}>
-                  <LogOut size={20} />
-                  <span>{t.logout}</span>
-                </button>
-              </nav>
+              </div>
             </motion.aside>
           </>
         )}
