@@ -400,9 +400,36 @@ const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNaviga
             </div>
 
             <div className="about-content">
-              <p>{t.aboutPara1}</p>
-              <p>{t.aboutPara2}</p>
-              <p>{t.aboutPara3}</p>
+              <div className="about-description">
+                <p>{t.aboutPara1}</p>
+                <p>{t.aboutPara2}</p>
+              </div>
+
+              <div className="about-divider"></div>
+
+              <div className="trust-section">
+                <h3 className="trust-title">🌾 {t.whyTrustTitle}</h3>
+                <ul className="trust-list">
+                  <li><span className="trust-icon">🤖</span> {t.trustPoint1}</li>
+                  <li><span className="trust-icon">🎤</span> {t.trustPoint2}</li>
+                  <li><span className="trust-icon">👥</span> {t.trustPoint3}</li>
+                  <li><span className="trust-icon">⭐</span> {t.trustPoint4}</li>
+                  <li><span className="trust-icon">🏡</span> {t.trustPoint5}</li>
+                </ul>
+              </div>
+
+              <div className="about-divider"></div>
+
+              <div className="mission-vision-grid">
+                <div className="mv-card">
+                  <h4>🌍 {t.missionTitle}</h4>
+                  <p>{t.missionDesc}</p>
+                </div>
+                <div className="mv-card">
+                  <h4>🚀 {t.visionTitle}</h4>
+                  <p>{t.visionDesc}</p>
+                </div>
+              </div>
             </div>
           </motion.div>
         </section>
