@@ -25,7 +25,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { languages } from './translations';
 import './Dashboard.css';
 
-const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNavigateToGlobalMarket, onNavigateToCommunity, onNavigateToAIChat, onNavigateToSeasonalAdvice, farmerName, currentLanguage, onLanguageChange, t }) => {
+const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNavigateToGlobalMarket, onNavigateToCommunity, onNavigateToAIChat, onNavigateToSeasonalAdvice, onNavigateToSettings, onNavigateToProfile, farmerName, currentLanguage, onLanguageChange, t }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [suggestionIndex, setSuggestionIndex] = useState(0);
@@ -97,14 +97,15 @@ const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNaviga
       title: t.settings,
       description: "App settings",
       icon: <SettingsIcon className="card-icon" />,
-      color: "#64748b"
+      color: "#64748b",
+      onClick: onNavigateToSettings
     }
   ];
 
   const sidebarItems = [
-    { icon: <User size={20} />, label: t.profile },
-    { icon: <SettingsIcon size={20} />, label: t.settings },
-    { icon: <Globe size={20} />, label: t.language },
+    { icon: <User size={20} />, label: t.profile, onClick: onNavigateToProfile },
+    { icon: <SettingsIcon size={20} />, label: t.settings, onClick: onNavigateToSettings },
+    { icon: <Globe size={20} />, label: t.language, onClick: () => setIsLangOpen(!isLangOpen) },
   ];
 
   return (
@@ -125,6 +126,12 @@ const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNaviga
         </div>
 
         <div className="header-right">
+          <button 
+            className="icon-button profile-trigger"
+            onClick={onNavigateToProfile}
+          >
+            <User size={24} />
+          </button>
           <div className="lang-selector-wrapper">
             <button 
               className="lang-pill"
@@ -181,7 +188,11 @@ const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNaviga
             >
               <div className="drawer-container-modern">
                 {/* Header */}
-                <div className="drawer-header-modern">
+                <div 
+                  className="drawer-header-modern" 
+                  onClick={() => { onNavigateToProfile(); setIsSidebarOpen(false); }}
+                  style={{ cursor: 'pointer' }}
+                >
                   <div className="profile-group-modern">
                     <div className="avatar-container-modern">
                       <div className="avatar-glow-modern"></div>
@@ -190,26 +201,29 @@ const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNaviga
                       </div>
                     </div>
                     <div className="profile-text-modern">
-                      <h3 className="profile-name-modern">Rahul Sharma</h3>
+                      <h3 className="profile-name-modern">{farmerName || 'Rahul Sharma'}</h3>
                       <span className="profile-badge-modern">Premium Farmer</span>
                     </div>
                   </div>
-                  <button className="close-btn-modern" onClick={() => setIsSidebarOpen(false)}>
+                  <button 
+                    className="close-btn-modern" 
+                    onClick={(e) => { e.stopPropagation(); setIsSidebarOpen(false); }}
+                  >
                     <X size={20} />
                   </button>
                 </div>
 
                 {/* Navigation Menu */}
                 <nav className="drawer-nav-modern">
-                  <button className="nav-item-modern">
+                  <button className="nav-item-modern" onClick={() => { onNavigateToProfile(); setIsSidebarOpen(false); }}>
                     <User size={20} className="nav-icon-modern" />
                     <span>Farmer Profile</span>
                   </button>
-                  <button className="nav-item-modern">
+                  <button className="nav-item-modern" onClick={() => { onNavigateToSettings(); setIsSidebarOpen(false); }}>
                     <SettingsIcon size={20} className="nav-icon-modern" />
                     <span>Settings</span>
                   </button>
-                  <button className="nav-item-modern">
+                  <button className="nav-item-modern" onClick={() => setIsLangOpen(true)}>
                     <Globe size={20} className="nav-icon-modern" />
                     <span>Language</span>
                   </button>

@@ -8,6 +8,8 @@ import FarmerOnboarding from './FarmerOnboarding';
 import SeasonalAdvice from './SeasonalAdvice';
 import LiveMandi from './LiveMandi';
 import FarmerCommunity from './FarmerCommunity';
+import Settings from './Settings';
+import FarmerProfile from './FarmerProfile';
 import './App.css';
 
 function App() {
@@ -15,7 +17,7 @@ function App() {
     return localStorage.getItem('agriSetuLang') || 'en';
   });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentPage, setCurrentPage] = useState('login'); // 'login', 'onboarding', 'dashboard', 'weather', 'market', 'seasonal-advice'
+  const [currentPage, setCurrentPage] = useState('login'); // 'login', 'onboarding', 'dashboard', 'weather', 'market', 'seasonal-advice', 'settings', 'profile'
   const [userName, setUserName] = useState('');
   const [onboardingData, setOnboardingData] = useState(null);
   const [formData, setFormData] = useState({
@@ -25,7 +27,7 @@ function App() {
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const handleLanguageChange = (lang) => {
     setCurrentLanguage(lang);
     localStorage.setItem('agriSetuLang', lang);
@@ -71,6 +73,14 @@ function App() {
 
   const navigateToSeasonalAdvice = () => {
     setCurrentPage('seasonal-advice');
+  };
+
+  const navigateToSettings = () => {
+    setCurrentPage('settings');
+  };
+
+  const navigateToProfile = () => {
+    setCurrentPage('profile');
   };
 
   // Form validation
@@ -199,6 +209,28 @@ function App() {
     if (currentPage === 'seasonal-advice') {
       return <SeasonalAdvice onBack={navigateToDashboard} locationData={onboardingData} t={t} />;
     }
+    if (currentPage === 'settings') {
+      return (
+        <Settings 
+          onBack={navigateToDashboard} 
+          t={t} 
+          currentLanguage={currentLanguage} 
+          onLanguageChange={handleLanguageChange}
+          farmerName={userName}
+          locationData={onboardingData}
+        />
+      );
+    }
+    if (currentPage === 'profile') {
+      return (
+        <FarmerProfile 
+          onBack={navigateToDashboard} 
+          t={t} 
+          farmerName={userName}
+          locationData={onboardingData}
+        />
+      );
+    }
     return (
       <Dashboard 
         onLogout={handleLogout} 
@@ -208,6 +240,8 @@ function App() {
         onNavigateToCommunity={navigateToCommunity}
         onNavigateToAIChat={navigateToAIChat}
         onNavigateToSeasonalAdvice={navigateToSeasonalAdvice}
+        onNavigateToSettings={navigateToSettings}
+        onNavigateToProfile={navigateToProfile}
         farmerName={userName}
         locationData={onboardingData}
         currentLanguage={currentLanguage}

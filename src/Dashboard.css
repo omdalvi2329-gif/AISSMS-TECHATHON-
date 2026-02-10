@@ -1,9 +1,23 @@
 .dashboard-layout {
-  background-color: #0a0e0a;
+  --dashboard_bg: var(--surface_primary);
+  --card_surface: var(--surface_secondary);
+  --surface_alt: var(--surface_tertiary);
+  --surface_input: var(--surface_primary);
+  --divider: var(--divider_strong);
+  --divider_soft: var(--divider);
+  --text_primary: var(--text_primary);
+  --text_secondary: var(--text_secondary);
+  --text_muted: var(--text_muted);
+  --nav_bg: color-mix(in srgb, var(--surface_primary) 85%, transparent);
+  --success_green: var(--success_green);
+  --warning_yellow: var(--warning_yellow);
+  --danger_red: var(--danger_red);
+  background-color: var(--dashboard_bg);
   min-height: 100vh;
-  color: #e0e0e0;
+  color: var(--text_primary);
   font-family: 'Inter', sans-serif;
   overflow-x: hidden;
+  transition: background-color 250ms ease, color 250ms ease;
 }
 
 /* Top Nav Enhancements */
@@ -12,12 +26,13 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem 5%;
-  background: rgba(10, 14, 10, 0.8);
+  background: var(--nav_bg);
   backdrop-filter: blur(10px);
   position: sticky;
   top: 0;
   z-index: 1000;
-  border-bottom: 1px solid rgba(45, 54, 45, 0.5);
+  border-bottom: 1px solid var(--divider_soft);
+  transition: background-color 250ms ease, border-color 250ms ease;
 }
 
 /* Premium Sidebar Drawer Redesign - Modern Black/Green */
@@ -235,7 +250,7 @@
   font-size: 3.5rem;
   font-weight: 800;
   margin-bottom: 0.5rem;
-  color: #fff;
+  color: var(--text_primary);
   line-height: 1.1;
 }
 
@@ -246,13 +261,13 @@
 
 .hero-subtitle {
   font-size: 1.2rem;
-  color: #ccc;
+  color: color-mix(in srgb, var(--text_primary) 75%, transparent);
   margin-bottom: 0.8rem;
 }
 
 .hero-subcaption {
   font-size: 1rem;
-  color: #22c55e;
+  color: var(--success_green);
   font-weight: 600;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -266,8 +281,8 @@
 }
 
 .ai-chat-hero-card {
-  background: #161b16;
-  border: 1px solid #2d362d;
+  background: var(--card_surface);
+  border: 1px solid var(--divider);
   border-radius: 28px;
   padding: 2rem;
   cursor: pointer;
@@ -327,12 +342,12 @@
 .chat-hero-text h3 {
   margin: 0;
   font-size: 1.5rem;
-  color: #fff;
+  color: var(--text_primary);
 }
 
 .ai-suggestion-text {
   font-size: 1.1rem;
-  color: #22c55e;
+  color: var(--success_green);
   height: 1.5rem;
   margin-top: 0.4rem;
   font-weight: 500;
@@ -349,11 +364,12 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #0a0e0a;
-  border: 1px solid #2d362d;
+  background: var(--surface_input);
+  border: 1px solid var(--divider);
   padding: 0.8rem 1.2rem;
   border-radius: 16px;
-  color: #666;
+  color: var(--text_muted);
+  transition: background-color 250ms ease, border-color 250ms ease, color 250ms ease;
 }
 
 .placeholder-actions {
@@ -363,7 +379,7 @@
 }
 
 .action-icon {
-  color: #888;
+  color: var(--text_secondary);
   transition: color 0.3s;
 }
 
@@ -384,7 +400,7 @@
 
 .voice-helper {
   font-size: 0.85rem;
-  color: #888;
+  color: var(--text_secondary);
   text-align: right;
   font-style: italic;
 }
@@ -401,8 +417,8 @@
 }
 
 .feature-card {
-  background: #161b16;
-  border: 1px solid #2d362d;
+  background: var(--card_surface);
+  border: 1px solid var(--divider);
   border-radius: 24px;
   padding: 1.8rem;
   position: relative;
@@ -476,20 +492,20 @@
 .card-content h3 {
   margin: 0 0 0.5rem;
   font-size: 1.3rem;
-  color: #fff;
+  color: var(--text_primary);
 }
 
 .card-content p {
   margin: 0;
   font-size: 0.95rem;
-  color: #888;
+  color: var(--text_secondary);
   line-height: 1.4;
 }
 
 .card-arrow {
   margin-top: auto;
   align-self: flex-end;
-  color: #2d362d;
+  color: var(--divider);
   transition: all 0.3s;
 }
 
@@ -527,7 +543,7 @@
 
 .section-header h2 {
   font-size: 1.6rem;
-  color: #fff;
+  color: var(--text_primary);
   font-weight: 700;
   margin: 0;
 }
@@ -589,18 +605,18 @@
 .user-mini-info h4 {
   font-size: 1rem;
   margin: 0;
-  color: #fff;
+  color: var(--text_primary);
 }
 
 .user-mini-info span {
   font-size: 0.8rem;
-  color: #666;
+  color: var(--text_muted);
 }
 
 .feed-mini-text {
   margin-top: 1rem;
   font-size: 1rem;
-  color: #ccc;
+  color: color-mix(in srgb, var(--text_primary) 75%, transparent);
   line-height: 1.5;
 }
 
@@ -640,12 +656,12 @@
 .rank-info-mini h4 {
   margin: 0;
   font-size: 1.1rem;
-  color: #fff;
+  color: var(--text_primary);
 }
 
 .rank-info-mini span {
   font-size: 0.85rem;
-  color: #888;
+  color: var(--text_secondary);
 }
 
 .rank-stars-mini {
@@ -656,7 +672,7 @@
 
 .ranking-note {
   font-size: 0.9rem;
-  color: #666;
+  color: var(--text_muted);
   font-style: italic;
   text-align: center;
   margin: 0;
@@ -666,7 +682,8 @@
 .glass-card {
   background: rgba(22, 27, 22, 0.4);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(45, 54, 45, 0.5);
+  border: 1px solid var(--divider_soft);
+  transition: border-color 250ms ease;
 }
 
 /* Animations */
@@ -698,7 +715,7 @@
 }
 
 .about-card {
-  background: #111811;
+  background: var(--surface_alt);
   border: 1px solid rgba(34, 197, 94, 0.2);
   border-radius: 32px;
   padding: 3rem;
@@ -721,7 +738,7 @@
 .about-title {
   font-size: 2.2rem;
   font-weight: 800;
-  color: #fff;
+  color: var(--text_primary);
   margin-bottom: 0.5rem;
   background: linear-gradient(135deg, #fff 0%, #22c55e 100%);
   -webkit-background-clip: text;
@@ -731,7 +748,7 @@
 
 .about-subtitle {
   font-size: 1.1rem;
-  color: #22c55e;
+  color: var(--success_green);
   font-weight: 600;
 }
 
@@ -744,7 +761,7 @@
 .about-description p {
   font-size: 1.1rem;
   line-height: 1.6;
-  color: #ccc;
+  color: color-mix(in srgb, var(--text_primary) 75%, transparent);
   margin-bottom: 1rem;
 }
 
@@ -761,7 +778,7 @@
 
 .trust-title {
   font-size: 1.4rem;
-  color: #fff;
+  color: var(--text_primary);
   margin-bottom: 1.5rem;
   text-align: center;
 }
@@ -781,7 +798,7 @@
   background: rgba(255, 255, 255, 0.03);
   padding: 1rem;
   border-radius: 16px;
-  color: #ddd;
+  color: color-mix(in srgb, var(--text_primary) 85%, transparent);
   font-size: 1rem;
   transition: transform 0.3s ease;
 }
@@ -824,14 +841,14 @@
 
 .mv-card h4 {
   font-size: 1.3rem;
-  color: #22c55e;
+  color: var(--success_green);
   margin-bottom: 0.8rem;
 }
 
 .mv-card p {
   font-size: 1rem;
   line-height: 1.5;
-  color: #aaa;
+  color: var(--text_secondary);
 }
 
 @media (max-width: 768px) {
@@ -846,11 +863,11 @@
 
 /* Language Selector Redesign (Strict Black/Green) */
 .lang-pill {
-  background: #0B0F0C;
+  background: var(--surface_alt);
   border: 1px solid rgba(34, 197, 94, 0.3);
   padding: 0.5rem 1rem;
   border-radius: 8px;
-  color: #888;
+  color: var(--text_secondary);
   display: flex;
   align-items: center;
   gap: 0.6rem;
@@ -869,11 +886,58 @@
   color: #22c55e;
 }
 
+ .profile-trigger {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  background: radial-gradient(circle at 30% 30%, rgba(34, 197, 94, 0.18), rgba(11, 15, 12, 0.95) 70%);
+  color: #e5e7eb;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow:
+    0 10px 18px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: transform 0.15s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  position: relative;
+ }
+
+ .profile-trigger::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: conic-gradient(from 180deg, rgba(34, 197, 94, 0.0), rgba(34, 197, 94, 0.6), rgba(34, 197, 94, 0.0));
+  filter: blur(0.6px);
+  opacity: 0.55;
+  pointer-events: none;
+ }
+
+ .profile-trigger svg {
+  color: #86efac;
+  position: relative;
+  z-index: 1;
+ }
+
+ .profile-trigger:hover {
+  border-color: rgba(34, 197, 94, 0.7);
+  box-shadow:
+    0 14px 22px rgba(0, 0, 0, 0.42),
+    0 0 0 4px rgba(34, 197, 94, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+ }
+
+ .profile-trigger:active {
+  transform: scale(0.96);
+ }
+
 .lang-dropdown {
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
-  background: #0B0F0C;
+  background: var(--surface_alt);
   border: 1px solid rgba(34, 197, 94, 0.2);
   border-radius: 12px;
   width: 140px;
