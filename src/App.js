@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { translations, languages } from './translations';
 import Dashboard from './Dashboard';
 import Weather from './Weather';
@@ -17,7 +17,7 @@ function App() {
     return localStorage.getItem('agriSetuLang') || 'en';
   });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentPage, setCurrentPage] = useState('login'); // 'login', 'onboarding', 'dashboard', 'weather', 'market', 'seasonal-advice', 'settings', 'profile'
+  const [currentPage, setCurrentPage] = useState('login'); // 'login', 'onboarding', 'dashboard', 'weather', 'market', 'seasonal-advice', 'settings', 'farmer-profile'
   const [userName, setUserName] = useState('');
   const [onboardingData, setOnboardingData] = useState(null);
   const [formData, setFormData] = useState({
@@ -34,6 +34,32 @@ function App() {
   };
 
   const t = translations[currentLanguage];
+
+  useEffect(() => {
+    const syncFromHash = () => {
+      const hash = window.location.hash || '';
+
+      if (!isLoggedIn) return;
+
+      if (hash === '#/farmer-profile') {
+        setCurrentPage('farmer-profile');
+        return;
+      }
+
+      if (hash === '#/settings') {
+        setCurrentPage('settings');
+        return;
+      }
+
+      if (hash === '#/dashboard' || hash === '' || hash === '#/') {
+        setCurrentPage('dashboard');
+      }
+    };
+
+    syncFromHash();
+    window.addEventListener('hashchange', syncFromHash);
+    return () => window.removeEventListener('hashchange', syncFromHash);
+  }, [isLoggedIn]);
 
   const navigateToCommunity = () => {
     setCurrentPage('community');
@@ -65,6 +91,7 @@ function App() {
 
   const navigateToDashboard = () => {
     setCurrentPage('dashboard');
+    window.location.hash = '#/dashboard';
   };
 
   const navigateToAIChat = () => {
@@ -77,10 +104,12 @@ function App() {
 
   const navigateToSettings = () => {
     setCurrentPage('settings');
+    window.location.hash = '#/settings';
   };
 
   const navigateToProfile = () => {
-    setCurrentPage('profile');
+    setCurrentPage('farmer-profile');
+    window.location.hash = '#/farmer-profile';
   };
 
   // Form validation
@@ -221,7 +250,8 @@ function App() {
         />
       );
     }
-    if (currentPage === 'profile') {
+
+    if (currentPage === 'farmer-profile') {
       return (
         <FarmerProfile 
           onBack={navigateToDashboard} 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { 
   ArrowLeft, 
   Globe, 
@@ -11,8 +11,6 @@ import {
   ChevronDown, 
   Languages, 
   Type, 
-  WifiOff, 
-  Smartphone, 
   ShieldCheck, 
   Mail, 
   Phone, 
@@ -22,20 +20,247 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './Settings.css';
+import { createApiClient } from './settingsApi';
+import {
+  clearSession,
+  enqueueMutation,
+  getSessionToken,
+  loadQueue,
+  loadSettingsFromStorage,
+  removeMutationById,
+  saveSettingsToStorage
+} from './settingsStorage';
+
+const SETTINGS_DEFAULTS = {
+  general: {
+    theme: 'dark',
+    language: 'en',
+    autoUpdate: true,
+    textSize: 'medium'
+  },
+  notifications: {
+    enabled: true,
+    cropAdvisory: true,
+    weatherAlerts: true,
+    marketPrices: true,
+    smsAlerts: false,
+    pushToken: ''
+  },
+  user: {
+    name: '',
+    phone: ''
+  }
+};
+
+const nowId = () => `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+
+const mergeSettings = (base, patch) => {
+  if (!patch) return base;
+  return {
+    ...base,
+    general: { ...base.general, ...(patch.general || {}) },
+    notifications: { ...base.notifications, ...(patch.notifications || {}) },
+    user: { ...base.user, ...(patch.user || {}) }
+  };
+};
+
+const isOnline = (offlineMode) => {
+  if (offlineMode) return false;
+  if (typeof navigator === 'undefined') return true;
+  return navigator.onLine !== false;
+};
+
+const compressImage = async (file, { maxW = 1280, maxH = 1280, quality = 0.7 } = {}) => {
+  if (!file) return null;
+  const dataUrl = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
+    reader.onerror = () => reject(new Error('Failed to read image'));
+    reader.readAsDataURL(file);
+  });
+
+  const img = await new Promise((resolve, reject) => {
+    const i = new Image();
+    i.onload = () => resolve(i);
+    i.onerror = () => reject(new Error('Invalid image'));
+    i.src = dataUrl;
+  });
+
+  const ratio = Math.min(maxW / img.width, maxH / img.height, 1);
+  const w = Math.max(1, Math.round(img.width * ratio));
+  const h = Math.max(1, Math.round(img.height * ratio));
+
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, w, h);
+
+  const blob = await new Promise((resolve) => {
+    canvas.toBlob((b) => resolve(b), 'image/jpeg', quality);
+  });
+
+  if (!blob) throw new Error('Failed to compress image');
+  return new File([blob], 'screenshot.jpg', { type: 'image/jpeg' });
+};
+
+const ToggleRow = ({ icon, label, checked, onChange, disabled, right }) => {
+  return (
+    <div className={`setting-item ${disabled ? 'disabled' : ''}`}>
+      <div className="item-label">
+        {icon}
+        <span>{label}</span>
+      </div>
+      <div className="setting-right">
+        {right}
+        <label className="switch">
+          <input type="checkbox" checked={checked} disabled={disabled} onChange={onChange} />
+          <span className="slider"></span>
+        </label>
+      </div>
+    </div>
+  );
+};
+
+const StatusLine = ({ saving, error, ok }) => {
+  if (!saving && !error && !ok) return null;
+  return (
+    <div className={`settings-status ${error ? 'error' : ok ? 'ok' : ''}`}>
+      {saving ? 'Saving…' : error ? error : ok ? 'Saved' : ''}
+    </div>
+  );
+};
 
 const Settings = ({ onBack, t, currentLanguage, onLanguageChange, farmerName, locationData }) => {
   const [activeSection, setActiveSection] = useState(null);
-  const [textSize, setTextSize] = useState('medium');
-  const [offlineMode, setOfflineMode] = useState(false);
-  const [notifications, setNotifications] = useState({
-    cropAdvisory: true,
-    weatherAlerts: true,
-    govSchemes: true,
-    marketPrices: true
+
+  const [settings, setSettings] = useState(() => {
+    const stored = loadSettingsFromStorage();
+    const merged = mergeSettings(SETTINGS_DEFAULTS, stored);
+    merged.general.language = stored?.general?.language || currentLanguage || merged.general.language;
+    merged.user.name = stored?.user?.name || farmerName || merged.user.name;
+    merged.user.phone = stored?.user?.phone || '';
+    return merged;
   });
-  const [silentHours, setSilentHours] = useState(false);
-  const [showSupportSuccess, setShowSupportSuccess] = useState(false);
-  const [supportMessage, setSupportMessage] = useState('');
+
+  const [offlineMode, setOfflineMode] = useState(false);
+
+  const [saveState, setSaveState] = useState({
+    general: { saving: false, error: '', ok: false },
+    notifications: { saving: false, error: '', ok: false },
+    privacy: { saving: false, error: '', ok: false },
+    help: { saving: false, error: '', ok: false }
+  });
+
+  const [toast, setToast] = useState(null);
+  const toastTimerRef = useRef(null);
+
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+
+  const [supportForm, setSupportForm] = useState({
+    category: 'App Bug',
+    message: '',
+    screenshotFile: null
+  });
+  const [supportResult, setSupportResult] = useState({ ticketId: '', lastError: '', canRetry: false, payload: null });
+
+  const api = useMemo(
+    () =>
+      createApiClient({
+        baseUrl: '',
+        getAuthToken: () => getSessionToken()
+      }),
+    []
+  );
+
+  const appVersion = useMemo(() => {
+    return process.env.REACT_APP_VERSION || process.env.npm_package_version || '1.0.0';
+  }, []);
+
+  const textSize = settings.general.textSize;
+
+  const showToast = (type, message) => {
+    setToast({ type, message });
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setToast(null), 2500);
+  };
+
+  useEffect(() => {
+    saveSettingsToStorage(settings);
+  }, [settings]);
+
+  useEffect(() => {
+    const stored = loadSettingsFromStorage();
+    if (!stored) return;
+    const merged = mergeSettings(SETTINGS_DEFAULTS, stored);
+    merged.general.language = stored?.general?.language || currentLanguage || merged.general.language;
+    merged.user.name = stored?.user?.name || farmerName || merged.user.name;
+    setSettings(merged);
+  }, [currentLanguage, farmerName]);
+
+  const flushQueue = useCallback(async () => {
+    const queue = loadQueue();
+    if (!queue.length) return;
+
+    for (const m of queue) {
+      if (!isOnline(offlineMode)) return;
+      let res = null;
+
+      if (m.kind === 'general') res = await api.putGeneralSettings(m.payload);
+      if (m.kind === 'notifications') res = await api.putNotificationSettings(m.payload);
+      if (m.kind === 'userUpdate') res = await api.putUserUpdate(m.payload);
+
+      if (res && res.ok) {
+        removeMutationById(m.id);
+      } else {
+        return;
+      }
+    }
+  }, [api, offlineMode]);
+
+  useEffect(() => {
+    const onOnline = () => {
+      if (!isOnline(offlineMode)) return;
+      flushQueue();
+    };
+    window.addEventListener('online', onOnline);
+    return () => window.removeEventListener('online', onOnline);
+  }, [offlineMode, flushQueue]);
+
+  const setSectionSave = (section, patch) => {
+    setSaveState((prev) => ({
+      ...prev,
+      [section]: { ...prev[section], ...patch }
+    }));
+  };
+
+  const saveOrQueue = async (section, kind, apiCall, payload) => {
+    setSectionSave(section, { saving: true, error: '', ok: false });
+
+    if (!isOnline(offlineMode)) {
+      enqueueMutation({ id: nowId(), kind, payload, createdAt: new Date().toISOString() });
+      setSectionSave(section, { saving: false, error: '', ok: true });
+      showToast('info', 'Saved offline. Will sync when online.');
+      return;
+    }
+
+    const res = await apiCall(payload);
+    if (!res.ok) {
+      if (res.error.code === 'NETWORK' || res.error.code === 'TIMEOUT') {
+        enqueueMutation({ id: nowId(), kind, payload, createdAt: new Date().toISOString() });
+        setSectionSave(section, { saving: false, error: '', ok: true });
+        showToast('info', 'Saved locally. Will sync when network is back.');
+        return;
+      }
+      setSectionSave(section, { saving: false, error: res.error.message || 'Failed to save.', ok: false });
+      showToast('error', res.error.message || 'Failed');
+      return;
+    }
+
+    setSectionSave(section, { saving: false, error: '', ok: true });
+    showToast('success', 'Saved');
+  };
 
   const sections = [
     { id: 'general', title: '🌐 General Settings', icon: <Globe size={24} /> },
@@ -50,12 +275,136 @@ const Settings = ({ onBack, t, currentLanguage, onLanguageChange, farmerName, lo
     setActiveSection(activeSection === id ? null : id);
   };
 
-  const handleSupportSubmit = (e) => {
+  const handleSupportSubmit = async (e) => {
     e.preventDefault();
-    if (supportMessage.trim()) {
-      setShowSupportSuccess(true);
-      setSupportMessage('');
-      setTimeout(() => setShowSupportSuccess(false), 3000);
+    setSupportResult({ ticketId: '', lastError: '', canRetry: false, payload: null });
+
+    const message = String(supportForm.message || '').trim();
+    if (!message) {
+      showToast('error', 'Please enter your issue message.');
+      return;
+    }
+
+    if (!isOnline(offlineMode)) {
+      const payload = { ...supportForm, message, offlineSavedAt: new Date().toISOString() };
+      setSupportResult({ ticketId: '', lastError: 'You are offline. Please retry when online.', canRetry: true, payload });
+      showToast('error', 'Offline. Please retry when online.');
+      return;
+    }
+
+    setSectionSave('help', { saving: true, error: '', ok: false });
+
+    try {
+      const screenshot = supportForm.screenshotFile
+        ? await compressImage(supportForm.screenshotFile, { maxW: 1280, maxH: 1280, quality: 0.72 })
+        : null;
+
+      const fd = new FormData();
+      fd.append('category', supportForm.category);
+      fd.append('message', message);
+      fd.append('appVersion', appVersion);
+      fd.append('language', settings.general.language);
+      if (screenshot) fd.append('screenshot', screenshot, screenshot.name);
+
+      const res = await api.postSupportTicket(fd);
+      if (!res.ok) {
+        setSectionSave('help', { saving: false, error: res.error.message || 'Failed to submit.', ok: false });
+        setSupportResult({ ticketId: '', lastError: res.error.message || 'Failed to submit.', canRetry: true, payload: null });
+        showToast('error', res.error.message || 'Failed');
+        return;
+      }
+
+      const ticketId =
+        (res.data && typeof res.data === 'object' && (res.data.ticketId || res.data.id)) ||
+        `TKT-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
+
+      setSectionSave('help', { saving: false, error: '', ok: true });
+      setSupportResult({ ticketId, lastError: '', canRetry: false, payload: null });
+      setSupportForm({ category: supportForm.category, message: '', screenshotFile: null });
+      showToast('success', `Ticket submitted: ${ticketId}`);
+    } catch (err) {
+      const msg = err?.message || 'Failed to submit.';
+      setSectionSave('help', { saving: false, error: msg, ok: false });
+      setSupportResult({ ticketId: '', lastError: msg, canRetry: true, payload: null });
+      showToast('error', msg);
+    }
+  };
+
+  const retrySupport = async () => {
+    if (!supportResult.canRetry) return;
+    if (!isOnline(offlineMode)) {
+      showToast('error', 'Still offline.');
+      return;
+    }
+    if (supportResult.payload) {
+      setSupportForm({
+        category: supportResult.payload.category,
+        message: supportResult.payload.message,
+        screenshotFile: supportResult.payload.screenshotFile || null
+      });
+    }
+    const fakeEvent = { preventDefault: () => {} };
+    await handleSupportSubmit(fakeEvent);
+  };
+
+  const handleProfileUpdate = async () => {
+    const name = String(settings.user.name || '').trim();
+    const phone = String(settings.user.phone || '').trim();
+    if (!name) {
+      showToast('error', 'Name is required.');
+      return;
+    }
+    if (phone && !/^\d{10}$/.test(phone)) {
+      showToast('error', 'Enter a valid 10-digit phone number.');
+      return;
+    }
+
+    await saveOrQueue('privacy', 'userUpdate', api.putUserUpdate, { name, phone });
+  };
+
+  const handleLogout = async () => {
+    setSectionSave('privacy', { saving: true, error: '', ok: false });
+    if (isOnline(offlineMode)) {
+      await api.postLogout();
+    }
+    clearSession();
+    setSectionSave('privacy', { saving: false, error: '', ok: true });
+    showToast('success', 'Logged out');
+    window.location.hash = '#/';
+    window.location.reload();
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText.trim().toUpperCase() !== 'DELETE') {
+      showToast('error', 'Type DELETE to confirm.');
+      return;
+    }
+
+    setSectionSave('privacy', { saving: true, error: '', ok: false });
+    const res = await api.deleteUser({ confirm: 'DELETE' });
+    if (!res.ok) {
+      setSectionSave('privacy', { saving: false, error: res.error.message || 'Delete failed.', ok: false });
+      showToast('error', res.error.message || 'Delete failed');
+      return;
+    }
+
+    clearSession();
+    setSectionSave('privacy', { saving: false, error: '', ok: true });
+    showToast('success', 'Account deleted');
+    window.location.hash = '#/';
+    window.location.reload();
+  };
+
+  const fetchPushTokenIfPossible = async () => {
+    try {
+      if (!('serviceWorker' in navigator)) return '';
+      const reg = await navigator.serviceWorker.ready;
+      if (!reg.pushManager) return '';
+      const sub = await reg.pushManager.getSubscription();
+      if (!sub) return '';
+      return sub.endpoint || '';
+    } catch (e) {
+      return '';
     }
   };
 
@@ -77,14 +426,45 @@ const Settings = ({ onBack, t, currentLanguage, onLanguageChange, farmerName, lo
       case 'general':
         return (
           <div className="section-content">
+            <StatusLine saving={saveState.general.saving} error={saveState.general.error} ok={saveState.general.ok} />
+
+            <ToggleRow
+              icon={<Globe size={20} />}
+              label="Dark mode"
+              checked={settings.general.theme === 'dark'}
+              onChange={async () => {
+                const nextTheme = settings.general.theme === 'dark' ? 'light' : 'dark';
+                const next = { ...settings, general: { ...settings.general, theme: nextTheme } };
+                setSettings(next);
+                await saveOrQueue('general', 'general', api.putGeneralSettings, next.general);
+              }}
+            />
+
+            <ToggleRow
+              icon={<ShieldCheck size={20} />}
+              label="Offline mode"
+              checked={offlineMode}
+              onChange={() => {
+                const next = !offlineMode;
+                setOfflineMode(next);
+                showToast('info', next ? 'Offline mode enabled.' : 'Offline mode disabled.');
+                if (!next) flushQueue();
+              }}
+            />
+
             <div className="setting-item">
               <div className="item-label">
                 <Languages size={20} />
                 <span>Language selection</span>
               </div>
               <select 
-                value={currentLanguage} 
-                onChange={(e) => onLanguageChange(e.target.value)}
+                value={settings.general.language} 
+                onChange={async (e) => {
+                  const lang = e.target.value;
+                  setSettings((prev) => ({ ...prev, general: { ...prev.general, language: lang } }));
+                  onLanguageChange(lang);
+                  await saveOrQueue('general', 'general', api.putGeneralSettings, { ...settings.general, language: lang });
+                }}
                 className="setting-select"
               >
                 <option value="en">English</option>
@@ -102,26 +482,35 @@ const Settings = ({ onBack, t, currentLanguage, onLanguageChange, farmerName, lo
                   <button 
                     key={size}
                     className={`size-btn ${textSize === size ? 'active' : ''}`}
-                    onClick={() => setTextSize(size)}
+                    onClick={async () => {
+                      const next = { ...settings, general: { ...settings.general, textSize: size } };
+                      setSettings(next);
+                      await saveOrQueue('general', 'general', api.putGeneralSettings, next.general);
+                    }}
                   >
                     {size.charAt(0).toUpperCase() + size.slice(1)}
                   </button>
                 ))}
               </div>
             </div>
+
+            <ToggleRow
+              icon={<ShieldCheck size={20} />}
+              label="Auto-update"
+              checked={Boolean(settings.general.autoUpdate)}
+              onChange={async () => {
+                const next = { ...settings, general: { ...settings.general, autoUpdate: !settings.general.autoUpdate } };
+                setSettings(next);
+                await saveOrQueue('general', 'general', api.putGeneralSettings, next.general);
+              }}
+            />
+
             <div className="setting-item">
               <div className="item-label">
-                <WifiOff size={20} />
-                <span>Offline mode</span>
+                <ShieldCheck size={20} />
+                <span>App version</span>
               </div>
-              <label className="switch">
-                <input 
-                  type="checkbox" 
-                  checked={offlineMode} 
-                  onChange={() => setOfflineMode(!offlineMode)} 
-                />
-                <span className="slider"></span>
-              </label>
+              <div className="setting-readonly">v{appVersion}</div>
             </div>
           </div>
         );
@@ -129,58 +518,163 @@ const Settings = ({ onBack, t, currentLanguage, onLanguageChange, farmerName, lo
       case 'notifications':
         return (
           <div className="section-content">
-            {Object.entries(notifications).map(([key, value]) => (
-              <div className="setting-item" key={key}>
-                <div className="item-label">
-                  <span>{key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</span>
-                </div>
-                <label className="switch">
-                  <input 
-                    type="checkbox" 
-                    checked={value} 
-                    onChange={() => setNotifications(prev => ({ ...prev, [key]: !prev[key] }))} 
-                  />
-                  <span className="slider"></span>
-                </label>
-              </div>
-            ))}
+            <StatusLine saving={saveState.notifications.saving} error={saveState.notifications.error} ok={saveState.notifications.ok} />
+
+            <ToggleRow
+              icon={<Bell size={20} />}
+              label="Notifications (Master)"
+              checked={Boolean(settings.notifications.enabled)}
+              onChange={async () => {
+                const nextEnabled = !settings.notifications.enabled;
+                const next = {
+                  ...settings,
+                  notifications: { ...settings.notifications, enabled: nextEnabled }
+                };
+                setSettings(next);
+                await saveOrQueue('notifications', 'notifications', api.putNotificationSettings, next.notifications);
+              }}
+            />
+
+            <ToggleRow
+              icon={null}
+              label="Crop advisory alerts"
+              checked={Boolean(settings.notifications.cropAdvisory)}
+              disabled={!settings.notifications.enabled}
+              onChange={async () => {
+                const next = {
+                  ...settings,
+                  notifications: { ...settings.notifications, cropAdvisory: !settings.notifications.cropAdvisory }
+                };
+                setSettings(next);
+                await saveOrQueue('notifications', 'notifications', api.putNotificationSettings, next.notifications);
+              }}
+            />
+
+            <ToggleRow
+              icon={null}
+              label="Weather alerts"
+              checked={Boolean(settings.notifications.weatherAlerts)}
+              disabled={!settings.notifications.enabled}
+              onChange={async () => {
+                const next = {
+                  ...settings,
+                  notifications: { ...settings.notifications, weatherAlerts: !settings.notifications.weatherAlerts }
+                };
+                setSettings(next);
+                await saveOrQueue('notifications', 'notifications', api.putNotificationSettings, next.notifications);
+              }}
+            />
+
+            <ToggleRow
+              icon={null}
+              label="Market price alerts"
+              checked={Boolean(settings.notifications.marketPrices)}
+              disabled={!settings.notifications.enabled}
+              onChange={async () => {
+                const next = {
+                  ...settings,
+                  notifications: { ...settings.notifications, marketPrices: !settings.notifications.marketPrices }
+                };
+                setSettings(next);
+                await saveOrQueue('notifications', 'notifications', api.putNotificationSettings, next.notifications);
+              }}
+            />
+
+            <ToggleRow
+              icon={null}
+              label="SMS alerts"
+              checked={Boolean(settings.notifications.smsAlerts)}
+              disabled={!settings.notifications.enabled}
+              onChange={async () => {
+                const next = {
+                  ...settings,
+                  notifications: { ...settings.notifications, smsAlerts: !settings.notifications.smsAlerts }
+                };
+                setSettings(next);
+                await saveOrQueue('notifications', 'notifications', api.putNotificationSettings, next.notifications);
+              }}
+            />
+
             <div className="setting-item">
               <div className="item-label">
-                <span>Silent hours option</span>
+                <ShieldCheck size={20} />
+                <span>Push token</span>
               </div>
-              <label className="switch">
-                <input 
-                  type="checkbox" 
-                  checked={silentHours} 
-                  onChange={() => setSilentHours(!silentHours)} 
-                />
-                <span className="slider"></span>
-              </label>
+              <button
+                type="button"
+                className="size-btn"
+                onClick={async () => {
+                  const token = await fetchPushTokenIfPossible();
+                  if (!token) {
+                    showToast('error', 'Push token not available on this device/browser.');
+                    return;
+                  }
+                  const next = { ...settings, notifications: { ...settings.notifications, pushToken: token } };
+                  setSettings(next);
+                  await saveOrQueue('notifications', 'notifications', api.putNotificationSettings, next.notifications);
+                }}
+              >
+                Sync Token
+              </button>
             </div>
           </div>
+
         );
 
       case 'privacy':
         return (
           <div className="section-content">
+            <StatusLine saving={saveState.privacy.saving} error={saveState.privacy.error} ok={saveState.privacy.ok} />
+
             <div className="info-card">
               <h4>Account Details</h4>
-              <p><strong>Name:</strong> {farmerName || 'Rahul Sharma'}</p>
-              <p><strong>Phone:</strong> +91 98765 43210</p>
-              <p><strong>Location:</strong> {locationData?.district || 'Pune'}, {locationData?.state || 'Maharashtra'}</p>
+
+              <div className="settings-form-row">
+                <label className="settings-label">Name</label>
+                <input
+                  className="settings-input"
+                  value={settings.user.name}
+                  onChange={(e) => setSettings((prev) => ({ ...prev, user: { ...prev.user, name: e.target.value } }))}
+                  placeholder="Enter your name"
+                />
+              </div>
+
+              <div className="settings-form-row">
+                <label className="settings-label">Phone (10 digits)</label>
+                <input
+                  className="settings-input"
+                  value={settings.user.phone}
+                  onChange={(e) => {
+                    const digits = String(e.target.value || '').replace(/\D/g, '').slice(0, 10);
+                    setSettings((prev) => ({ ...prev, user: { ...prev.user, phone: digits } }));
+                  }}
+                  placeholder="Mobile number"
+                />
+              </div>
+
+              <button type="button" className="send-btn" onClick={handleProfileUpdate} disabled={saveState.privacy.saving}>
+                Save Profile
+              </button>
+
+              <p>
+                <strong>Location:</strong> {locationData?.district || 'Not Set'}, {locationData?.state || 'Not Set'}
+              </p>
             </div>
-            <div className="setting-item clickable">
+
+            <div className="setting-item clickable" onClick={handleLogout}>
               <div className="item-label">
                 <ShieldCheck size={20} />
-                <span>Data usage summary</span>
+                <span>Logout</span>
               </div>
               <ChevronRight size={18} />
             </div>
-            <div className="setting-item clickable" onClick={() => alert('Cache cleared successfully!')}>
+
+            <div className="setting-item clickable" onClick={() => setDeleteModalOpen(true)}>
               <div className="item-label danger">
                 <Trash2 size={20} />
-                <span>Clear local cached data</span>
+                <span>Delete account</span>
               </div>
+              <ChevronRight size={18} />
             </div>
           </div>
         );
@@ -189,26 +683,33 @@ const Settings = ({ onBack, t, currentLanguage, onLanguageChange, farmerName, lo
         return (
           <div className="section-content">
             <div className="guide-card">
-              <div className="guide-step">
-                <div className="step-number">1</div>
-                <div className="step-info">
-                  <h5>Check Weather</h5>
-                  <p>Get daily rain and temperature updates for your farm.</p>
+              <details className="settings-accordion" open>
+                <summary className="settings-accordion-title">1. Weather (मौसम)</summary>
+                <div className="settings-accordion-body">
+                  Check daily rain/temperature for your district. Enable Weather Alerts in Notifications.
                 </div>
-              </div>
-              <div className="guide-step">
-                <div className="step-number">2</div>
-                <div className="step-info">
-                  <h5>Market Prices</h5>
-                  <p>See live Mandi rates for your crops nearby.</p>
+              </details>
+
+              <details className="settings-accordion">
+                <summary className="settings-accordion-title">2. Market Prices (बाजार भाव)</summary>
+                <div className="settings-accordion-body">
+                  View mandi rates and set Market Price Alerts to get updates.
                 </div>
-              </div>
-              <div className="guide-step">
-                <div className="step-number">3</div>
-                <div className="step-info">
-                  <h5>AI Assistant</h5>
-                  <p>Ask any farming question by voice or text.</p>
+              </details>
+
+              <details className="settings-accordion">
+                <summary className="settings-accordion-title">3. Advisory (सलाह)</summary>
+                <div className="settings-accordion-body">
+                  Crop advisory alerts help with irrigation, fertilizer, and disease prevention tips.
                 </div>
+              </details>
+
+              <div className="setting-item clickable" onClick={() => window.open('mailto:support@agrisetu.com', '_self')}>
+                <div className="item-label">
+                  <Mail size={20} />
+                  <span>Contact Support</span>
+                </div>
+                <ChevronRight size={18} />
               </div>
             </div>
           </div>
@@ -217,28 +718,72 @@ const Settings = ({ onBack, t, currentLanguage, onLanguageChange, farmerName, lo
       case 'help':
         return (
           <div className="section-content">
-            <div className="faq-section">
-              <h5>Frequently Asked Questions</h5>
-              <div className="faq-item">
-                <p className="faq-q">How do I change my location?</p>
-                <p className="faq-a">Go to Privacy & Account details to update your registered farm location.</p>
-              </div>
-            </div>
+            <StatusLine saving={saveState.help.saving} error={saveState.help.error} ok={saveState.help.ok} />
+
             <form className="support-form" onSubmit={handleSupportSubmit}>
               <h5>How can we help you?</h5>
+              <div className="settings-form-row">
+                <label className="settings-label">Issue Category</label>
+                <select
+                  className="setting-select"
+                  value={supportForm.category}
+                  onChange={(e) => setSupportForm((p) => ({ ...p, category: e.target.value }))}
+                >
+                  <option value="App Bug">App Bug</option>
+                  <option value="Weather Alerts">Weather Alerts</option>
+                  <option value="Market Prices">Market Prices</option>
+                  <option value="Advisory">Crop Advisory</option>
+                  <option value="Account">Account / Login</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
               <textarea 
-                placeholder="Tell us about your issue..."
-                value={supportMessage}
-                onChange={(e) => setSupportMessage(e.target.value)}
+                placeholder="Describe your issue (समस्या लिखें)..."
+                value={supportForm.message}
+                onChange={(e) => setSupportForm((p) => ({ ...p, message: e.target.value }))}
                 required
               ></textarea>
-              <div className="auto-info">
-                <p>App Version: 1.0.0</p>
-                <p>OS: Android 13</p>
-                <p>User ID: AGRI-{farmerName?.slice(0,3).toUpperCase() || 'USR'}-2024</p>
+
+              <div className="settings-form-row">
+                <label className="settings-label">Screenshot (optional)</label>
+                <input
+                  className="settings-file"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setSupportForm((p) => ({ ...p, screenshotFile: e.target.files?.[0] || null }))}
+                />
               </div>
-              <button type="submit" className="send-btn">Send Message</button>
+
+              <div className="auto-info">
+                <p>App Version: {appVersion}</p>
+                <p>Language: {settings.general.language}</p>
+                <p>Network: {isOnline(offlineMode) ? 'Online' : 'Offline'}</p>
+              </div>
+
+              <button type="submit" className="send-btn" disabled={saveState.help.saving}>
+                {saveState.help.saving ? 'Sending…' : 'Submit Ticket'}
+              </button>
             </form>
+
+            {supportResult.ticketId ? (
+              <div className="info-card">
+                <h4>Ticket Submitted</h4>
+                <p>Your ticket number is:</p>
+                <p className="ticket-id">{supportResult.ticketId}</p>
+              </div>
+            ) : null}
+
+            {supportResult.canRetry && supportResult.lastError ? (
+              <div className="info-card">
+                <h4>Submission Failed</h4>
+                <p>{supportResult.lastError}</p>
+                <button type="button" className="send-btn" onClick={retrySupport} disabled={saveState.help.saving}>
+                  Retry
+                </button>
+              </div>
+            ) : null}
+
             <div className="contact-methods">
               <p><Mail size={16} /> support@agrisetu.com</p>
               <p><Phone size={16} /> +91 1800-AGRI-SETU (Toll Free)</p>
@@ -280,8 +825,15 @@ const Settings = ({ onBack, t, currentLanguage, onLanguageChange, farmerName, lo
             </div>
             <div className="app-info-footer">
               <p>AgriSetu - Smart Farming Companion</p>
-              <p>Version 1.0.0</p>
+              <p>Version {appVersion}</p>
               <p>Last Update: Feb 09, 2026</p>
+              <button
+                type="button"
+                className="size-btn"
+                onClick={() => window.open('https://cra.link/deployment', '_blank', 'noopener,noreferrer')}
+              >
+                Open Developer Info
+              </button>
             </div>
           </div>
         );
@@ -293,7 +845,7 @@ const Settings = ({ onBack, t, currentLanguage, onLanguageChange, farmerName, lo
 
   return (
     <motion.div 
-      className={`settings-page text-${textSize}`}
+      className={`settings-page text-${textSize} theme-${settings.general.theme}`}
       initial="hidden"
       animate="visible"
       variants={containerVariants}
@@ -341,18 +893,54 @@ const Settings = ({ onBack, t, currentLanguage, onLanguageChange, farmerName, lo
       </main>
 
       <AnimatePresence>
-        {showSupportSuccess && (
-          <motion.div 
-            className="success-overlay"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
+        {toast && (
+          <motion.div
+            className={`settings-toast ${toast.type}`}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 12 }}
           >
-            <div className="success-card">
-              <CheckCircle2 size={48} color="#22c55e" />
-              <h3>Message Sent!</h3>
-              <p>Our support team will contact you shortly.</p>
+            <div className="settings-toast-inner">
+              {toast.type === 'success' ? <CheckCircle2 size={18} /> : null}
+              <span>{toast.message}</span>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {deleteModalOpen && (
+          <motion.div
+            className="success-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="settings-modal"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+            >
+              <h3>Delete Account</h3>
+              <p className="settings-modal-sub">
+                This will permanently delete your account and data. Type <strong>DELETE</strong> to confirm.
+              </p>
+              <input
+                className="settings-input"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder="Type DELETE"
+              />
+              <div className="settings-modal-actions">
+                <button type="button" className="size-btn" onClick={() => { setDeleteModalOpen(false); setDeleteConfirmText(''); }}>
+                  Cancel
+                </button>
+                <button type="button" className="send-btn" onClick={handleDeleteAccount} disabled={saveState.privacy.saving}>
+                  {saveState.privacy.saving ? 'Deleting…' : 'Delete'}
+                </button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

@@ -126,12 +126,6 @@ const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNaviga
         </div>
 
         <div className="header-right">
-          <button 
-            className="icon-button profile-trigger"
-            onClick={onNavigateToProfile}
-          >
-            <User size={24} />
-          </button>
           <div className="lang-selector-wrapper">
             <button 
               className="lang-pill"

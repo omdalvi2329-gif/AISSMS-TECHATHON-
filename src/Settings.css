@@ -109,6 +109,11 @@
   border-bottom: none;
 }
 
+ .setting-item.disabled {
+  opacity: 0.55;
+  pointer-events: none;
+ }
+
 .item-label {
   display: flex;
   align-items: center;
@@ -317,6 +322,145 @@ input:checked + .slider:before {
   transform: scale(0.98);
   background-color: #16a34a;
 }
+
+ .settings-status {
+  margin: 0 0 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #2d3a2d;
+  background-color: #141d14;
+  color: #94a3b8;
+  font-size: 0.9rem;
+ }
+
+ .settings-status.ok {
+  border-color: rgba(34, 197, 94, 0.7);
+  color: #86efac;
+ }
+
+ .settings-status.error {
+  border-color: rgba(248, 113, 113, 0.7);
+  color: #fca5a5;
+ }
+
+ .setting-readonly {
+  font-size: 0.95rem;
+  color: #cbd5e1;
+ }
+
+ .settings-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0.75rem 0;
+ }
+
+ .settings-label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+ }
+
+ .settings-input {
+  background-color: #0d160d;
+  color: #e2e8f0;
+  border: 1px solid #2d3a2d;
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+ }
+
+ .settings-file {
+  background-color: #0d160d;
+  color: #cbd5e1;
+  border: 1px solid #2d3a2d;
+  padding: 0.6rem;
+  border-radius: 8px;
+ }
+
+ .settings-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  z-index: 2000;
+  background-color: #141d14;
+  border: 1px solid #2d3a2d;
+  border-radius: 999px;
+  padding: 0.65rem 0.9rem;
+  max-width: calc(100% - 2rem);
+ }
+
+ .settings-toast.success {
+  border-color: rgba(34, 197, 94, 0.7);
+ }
+
+ .settings-toast.error {
+  border-color: rgba(248, 113, 113, 0.7);
+ }
+
+ .settings-toast-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #e2e8f0;
+  font-size: 0.95rem;
+ }
+
+ .settings-modal {
+  background-color: #141d14;
+  border-radius: 16px;
+  border: 1px solid #2d3a2d;
+  padding: 1.25rem;
+  max-width: 420px;
+  width: 100%;
+ }
+
+ .settings-modal h3 {
+  margin: 0;
+  color: #4ade80;
+ }
+
+ .settings-modal-sub {
+  margin: 0.5rem 0 0.75rem;
+  color: #94a3b8;
+  font-size: 0.95rem;
+ }
+
+ .settings-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.9rem;
+ }
+
+ .settings-accordion {
+  border: 1px solid #2d3a2d;
+  border-radius: 10px;
+  background-color: #0d160d;
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+ }
+
+ .settings-accordion-title {
+  cursor: pointer;
+  padding: 0.85rem 0.9rem;
+  color: #e2e8f0;
+  font-weight: 600;
+ }
+
+ .settings-accordion-body {
+  padding: 0.85rem 0.9rem;
+  color: #94a3b8;
+  font-size: 0.95rem;
+  border-top: 1px solid #1a241a;
+ }
+
+ .ticket-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 1rem;
+  color: #86efac;
+  margin: 0.5rem 0 0;
+ }
 
 .contact-methods {
   margin-top: 1.5rem;
