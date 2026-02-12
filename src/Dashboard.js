@@ -19,13 +19,14 @@ import {
   Sparkles,
   ArrowUpRight,
   Play,
-  Award
+  Award,
+  BarChart3
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { languages } from './translations';
 import './Dashboard.css';
 
-const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNavigateToGlobalMarket, onNavigateToCommunity, onNavigateToAIChat, onNavigateToSeasonalAdvice, onNavigateToSettings, onNavigateToProfile, farmerName, currentLanguage, onLanguageChange, t }) => {
+const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNavigateToGlobalMarket, onNavigateToCommunity, onNavigateToAIChat, onNavigateToSeasonalAdvice, onNavigateToSettings, onNavigateToProfile, onNavigateToImpact, farmerName, currentLanguage, onLanguageChange, t }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [suggestionIndex, setSuggestionIndex] = useState(0);
@@ -85,6 +86,15 @@ const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNaviga
     },
     {
       id: 5,
+      title: "AI Impact Dashboard",
+      description: "Dekhe AI se kitna fayda hua",
+      icon: <BarChart3 className="card-icon" />,
+      color: "#22c55e",
+      onClick: onNavigateToImpact,
+      isPremium: true
+    },
+    {
+      id: 6,
       title: t.farmerCommunity,
       description: "Gaav ke farmers ke daily updates",
       icon: <Users className="card-icon" />,
@@ -93,7 +103,7 @@ const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNaviga
       isNew: true
     },
     {
-      id: 6,
+      id: 7,
       title: t.settings,
       description: "App settings",
       icon: <SettingsIcon className="card-icon" />,
@@ -209,6 +219,11 @@ const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNaviga
 
                 {/* Navigation Menu */}
                 <nav className="drawer-nav-modern">
+                  <button className="nav-item-modern" onClick={() => { onNavigateToImpact(); setIsSidebarOpen(false); }}>
+                    <BarChart3 size={20} className="nav-icon-modern" />
+                    <span>AI Impact Dashboard</span>
+                    <span className="premium-tag-mini">PREMIUM</span>
+                  </button>
                   <button className="nav-item-modern" onClick={() => { onNavigateToProfile(); setIsSidebarOpen(false); }}>
                     <User size={20} className="nav-icon-modern" />
                     <span>Farmer Profile</span>

@@ -4,6 +4,7 @@ import Dashboard from './Dashboard';
 import Weather from './Weather';
 import GlobalMarket from './GlobalMarket';
 import AIChatPage from './AIChatPage';
+import AIImpactDashboard from './AIImpactDashboard';
 import FarmerOnboarding from './FarmerOnboarding';
 import SeasonalAdvice from './SeasonalAdvice';
 import LiveMandi from './LiveMandi';
@@ -17,7 +18,7 @@ function App() {
     return localStorage.getItem('agriSetuLang') || 'en';
   });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentPage, setCurrentPage] = useState('login'); // 'login', 'onboarding', 'dashboard', 'weather', 'market', 'seasonal-advice', 'settings', 'farmer-profile'
+  const [currentPage, setCurrentPage] = useState('login'); // 'login', 'onboarding', 'dashboard', 'weather', 'market', 'seasonal-advice', 'settings', 'farmer-profile', 'ai-impact'
   const [userName, setUserName] = useState('');
   const [onboardingData, setOnboardingData] = useState(null);
   const [formData, setFormData] = useState({
@@ -110,6 +111,10 @@ function App() {
   const navigateToProfile = () => {
     setCurrentPage('farmer-profile');
     window.location.hash = '#/farmer-profile';
+  };
+
+  const navigateToImpact = () => {
+    setCurrentPage('ai-impact');
   };
 
   // Form validation
@@ -261,6 +266,18 @@ function App() {
         />
       );
     }
+
+    if (currentPage === 'ai-impact') {
+      return (
+        <AIImpactDashboard 
+          onBack={navigateToDashboard} 
+          t={t} 
+          farmerName={userName}
+          locationData={onboardingData}
+        />
+      );
+    }
+
     return (
       <Dashboard 
         onLogout={handleLogout} 
@@ -272,6 +289,7 @@ function App() {
         onNavigateToSeasonalAdvice={navigateToSeasonalAdvice}
         onNavigateToSettings={navigateToSettings}
         onNavigateToProfile={navigateToProfile}
+        onNavigateToImpact={navigateToImpact}
         farmerName={userName}
         locationData={onboardingData}
         currentLanguage={currentLanguage}

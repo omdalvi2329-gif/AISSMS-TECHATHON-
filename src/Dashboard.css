@@ -435,16 +435,32 @@
   height: 100%;
 }
 
-.live-badge, .new-badge {
+.live-badge, .premium-tag-mini {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #000;
+  font-size: 0.6rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: auto;
+  letter-spacing: 0.5px;
+}
+
+.feature-card.premium {
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.premium-badge {
   position: absolute;
-  top: -1.2rem;
-  right: -1.2rem;
-  padding: 1.5rem 1.2rem 0.4rem;
-  font-size: 0.75rem;
-  font-weight: 900;
-  transform: rotate(45deg);
-  width: 80px;
-  text-align: center;
+  top: 10px;
+  right: 10px;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #000;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 100px;
+  z-index: 2;
 }
 
 .live-badge {
