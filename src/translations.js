@@ -28,12 +28,12 @@ export const translations = {
     off: "OFF",
 
     // Dashboard - AI Chatbot
-    aiAssistant: "AI Farming Assistant",
-    aiSubtitle: "Ask anything about crops, weather, markets & exports",
-    aiGreeting: "Namaste {name}! 👋 How can I help you with your farming today?",
-    aiDefaultGreeting: "Namaste! 👋 How can I help you with your farming today?",
-    aiOnline: "AI Online",
-    chatPlaceholder: "Type your question...",
+    aiAssistant: "KrishiMitra AI",
+    aiSubtitle: "Your Smart Crop & Farm Advisory Companion",
+    aiGreeting: "Namaste {name}! 🌾 I am KrishiMitra AI, your smart farming companion. How can I help you today?",
+    aiDefaultGreeting: "Namaste! 🌾 I am KrishiMitra AI, your smart farming companion. How can I help you today?",
+    aiOnline: "KrishiMitra Online",
+    chatPlaceholder: "Ask KrishiMitra about farming...",
 
     // Dashboard - Features
     weather: "Weather",
