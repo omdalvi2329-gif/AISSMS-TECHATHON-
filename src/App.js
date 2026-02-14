@@ -11,7 +11,6 @@ import LiveMandi from './LiveMandi';
 import FarmerCommunity from './FarmerCommunity';
 import Settings from './Settings';
 import FarmerProfile from './FarmerProfile';
-import SupabaseTest from './SupabaseTest';
 import './App.css';
 
 function App() {
@@ -302,7 +301,6 @@ function App() {
 
   return (
     <div className="app-container">
-      <SupabaseTest />
       {/* Header with Language Selector */}
       <header className="header">
         <select

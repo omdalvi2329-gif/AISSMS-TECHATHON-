@@ -156,43 +156,47 @@ const AIImpactDashboard = ({ onBack, t, farmerName, locationData }) => {
       value: simulationResults.currentIncome,
       prefix: "₹",
       subtext: `Based on ${farmSize} acres ${crop}`,
-      icon: <TrendingUp className="text-green-500" />,
+      icon: <TrendingUp size={20} />,
+      color: "emerald",
       delay: 0.1,
-      logic: "Income = Farm Size × Predicted Yield × Current Market Price",
-      trend: simulationResults.netProfitIncrease >= 0 ? <TrendingUp size={14} className="text-green-500" /> : <TrendingDown size={14} className="text-red-500" />
+      logic: "Income = Predicted Yield × Market Price",
+      trend: simulationResults.netProfitIncrease >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />
     },
     {
       id: 2,
-      title: "Yield Growth Prediction",
+      title: "Yield Growth",
       value: parseFloat(simulationResults.yieldGrowth),
       suffix: "%",
-      subtext: "Compared to last season",
-      icon: <Sprout className="text-emerald-500" />,
+      subtext: "AI Predicted Growth",
+      icon: <Sprout size={20} />,
+      color: "green",
       delay: 0.2,
-      logic: "Yield Growth = (AI Input Efficiency + Weather Alignment) - Baseline",
-      trend: parseFloat(simulationResults.yieldGrowth) >= 0 ? <TrendingUp size={14} className="text-green-500" /> : <TrendingDown size={14} className="text-red-500" />
+      logic: "Yield Growth = (AI Efficiency + Weather Alignment) - Baseline",
+      trend: parseFloat(simulationResults.yieldGrowth) >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />
     },
     {
       id: 3,
       title: "Water Savings",
       value: parseFloat(simulationResults.waterSavings),
       suffix: "%",
-      subtext: "AI irrigation impact",
-      icon: <Droplets className="text-blue-500" />,
+      subtext: "AI Optimization Impact",
+      icon: <Droplets size={20} />,
+      color: "blue",
       delay: 0.3,
       logic: "Savings = Evapotranspiration Monitoring - Standard Irrigation",
-      trend: <TrendingDown size={14} className="text-green-500" />
+      trend: <TrendingDown size={14} />
     },
     {
       id: 4,
       title: "Market Trend",
       value: simulationResults.marketTrend,
       isStatic: true,
-      subtext: priceModifier >= 0 ? "Favorable demand" : "Market volatility",
-      icon: <BarChart3 className="text-yellow-500" />,
+      subtext: priceModifier >= 0 ? "Favorable demand" : "High volatility",
+      icon: <BarChart3 size={20} />,
+      color: "yellow",
       delay: 0.4,
-      logic: "Trend = Real-time Mandi Data + Predictive Demand Modeling",
-      trend: priceModifier >= 0 ? <TrendingUp size={14} className="text-green-500" /> : <TrendingDown size={14} className="text-red-500" />
+      logic: "Trend = Real-time Mandi Data + Predictive Modeling",
+      trend: priceModifier >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />
     }
   ];
 
@@ -259,34 +263,39 @@ const AIImpactDashboard = ({ onBack, t, farmerName, locationData }) => {
         </div>
       </header>
 
-      <main className="dashboard-content">
+      <main className="dashboard-content fade-up-entrance">
         <section className="metrics-grid">
           {metrics.map((m) => (
             <motion.div 
               key={m.id}
-              className="metric-card glass-card"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4, delay: m.delay }}
-              whileHover={{ y: -5, scale: 1.02 }}
+              className={`metric-card glass-card color-${m.color}`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: m.delay }}
+              whileHover={{ y: -8, scale: 1.02 }}
             >
-              <div className="metric-icon">{m.icon}</div>
+              <div className={`metric-icon-wrapper ${m.color}`}>
+                {m.icon}
+              </div>
               <div className="metric-info">
                 <div className="metric-title-row">
-                  <h3>{m.title}</h3>
+                  <h3 className="premium-label">{m.title}</h3>
                   <div className="logic-tooltip">
-                    <Info size={14} />
+                    <Info size={12} />
                     <span className="tooltip-text">{m.logic}</span>
                   </div>
                 </div>
                 <div className="metric-value-row">
-                  <div className="metric-value">
+                  <div className="metric-value-main">
                     {m.isStatic ? m.value : <CountUp end={m.value} prefix={m.prefix} suffix={m.suffix} decimals={m.id === 1 ? 0 : 1} />}
                   </div>
-                  <div className="metric-trend-badge">{m.trend}</div>
+                  <div className={`trend-badge-premium ${m.color}`}>
+                    {m.trend}
+                  </div>
                 </div>
-                <p>{m.subtext}</p>
+                <div className="metric-subtext-premium">{m.subtext}</div>
               </div>
+              <div className="card-shine" />
             </motion.div>
           ))}
         </section>
@@ -295,60 +304,67 @@ const AIImpactDashboard = ({ onBack, t, farmerName, locationData }) => {
           <motion.div 
             className="comparison-card glass-card"
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.45 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
           >
             <div className="comparison-header">
-              <h2><Activity size={20} className="icon-green" /> Before AI vs With AgriSetu AI</h2>
+              <h2><Activity size={20} className="icon-green" /> Revenue Projection Analysis</h2>
               <div className="logic-tooltip">
                 <Info size={16} />
-                <span className="tooltip-text">Comparison based on historical farm data vs AI-optimized simulation results.</span>
+                <span className="tooltip-text">Real-time comparison between baseline performance and AI-optimized yields.</span>
               </div>
             </div>
-            <div className="comparison-grid">
-              <div className="comparison-row header">
-                <div className="metric-label">Metric</div>
-                <div className="before-val">Without AI</div>
-                <div className="after-val">With AgriSetu AI</div>
-              </div>
-              <div className="comparison-row">
-                <div className="metric-label">Expected Income</div>
-                <div className="before-val">₹{(farmSize * 52000).toLocaleString()}</div>
-                <div className="after-val">
-                  ₹{Math.round(simulationResults.currentIncome).toLocaleString()}
-                  <TrendingUp size={14} className="trend-up" />
+
+            <div className="revenue-comparison-viz">
+              <div className="rev-bar-group">
+                <div className="rev-bar-label-row">
+                  <span className="rev-label">Without AI <span className="sub-label">(Domestic Baseline)</span></span>
+                  <span className="rev-value">₹{(farmSize * 52000).toLocaleString()}</span>
+                </div>
+                <div className="rev-bar-bg">
+                  <motion.div 
+                    className="rev-bar-fill domestic"
+                    initial={{ width: 0 }}
+                    whileInView={{ width: '60%' }}
+                    transition={{ duration: 1.2, ease: "easeOut" }}
+                  />
                 </div>
               </div>
-              <div className="comparison-row">
-                <div className="metric-label">Water Usage</div>
-                <div className="before-val">100% (Standard)</div>
-                <div className="after-val">
-                  {Math.round(100 - simulationResults.waterSavings)}%
-                  <TrendingDown size={14} className="trend-down" />
+
+              <div className="rev-bar-group highlighted">
+                <div className="rev-bar-label-row">
+                  <span className="rev-label highlight">With AgriSetu AI <span className="sub-label">(Optimized Yield)</span></span>
+                  <span className="rev-value highlight">₹{Math.round(simulationResults.currentIncome).toLocaleString()}</span>
+                </div>
+                <div className="rev-bar-bg primary-glow-soft">
+                  <motion.div 
+                    className="rev-bar-fill ai-optimized"
+                    initial={{ width: 0 }}
+                    whileInView={{ width: '100%' }}
+                    transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
+                  >
+                    <div className="bar-glow-accent" />
+                  </motion.div>
                 </div>
               </div>
-              <div className="comparison-row">
-                <div className="metric-label">Risk Level</div>
-                <div className="before-val text-yellow-500">Medium</div>
-                <div className="after-val" style={{ color: getRiskColor(simulationResults.totalRisk) }}>
-                  {simulationResults.totalRisk < 20 ? 'Low' : simulationResults.totalRisk < 40 ? 'Medium' : 'High'}
-                  <TrendingDown size={14} className="trend-down" />
-                </div>
-              </div>
-              <div className="comparison-row">
-                <div className="metric-label">Yield Growth</div>
-                <div className="before-val">Baseline</div>
-                <div className="after-val">
-                  +{simulationResults.yieldGrowth}%
-                  <TrendingUp size={14} className="trend-up" />
-                </div>
-              </div>
-              <div className="comparison-row profit-highlight">
-                <div className="metric-label">Net Profit Increase</div>
-                <div className="before-val">--</div>
-                <div className="after-val text-green-400">
-                  ₹{Math.round(simulationResults.netProfitIncrease).toLocaleString()} (+{simulationResults.profitPercentage}%)
-                  <TrendingUp size={14} className="trend-up" />
+
+              <div className="profit-increase-premium-card mt-8">
+                <div className="profit-card-content">
+                  <div className="trending-icon-box">
+                    <TrendingUp size={24} />
+                  </div>
+                  <div className="profit-data">
+                    <div className="data-item">
+                      <span className="label">Net Profit Increase</span>
+                      <strong className="value">+₹{Math.round(simulationResults.netProfitIncrease).toLocaleString()}</strong>
+                    </div>
+                    <div className="divider-vertical" />
+                    <div className="data-item">
+                      <span className="label">Efficiency Gain</span>
+                      <strong className="value text-emerald-400">{simulationResults.profitPercentage}%</strong>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -358,64 +374,91 @@ const AIImpactDashboard = ({ onBack, t, farmerName, locationData }) => {
         <section className="advanced-metrics">
           <motion.div 
             className="impact-card risk-card glass-card"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.5 }}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
           >
             <div className="card-header">
-              <h3><AlertTriangle size={18} /> Risk Breakdown</h3>
+              <h3><AlertTriangle size={18} className="text-orange-400" /> Risk Intelligence</h3>
               <div className="logic-tooltip">
                 <Info size={16} />
                 <span className="tooltip-text">Calculated as a weighted average of environmental and market factors.</span>
               </div>
-              <span className="risk-level-badge" style={{ backgroundColor: `${getRiskColor(simulationResults.totalRisk)}20`, color: getRiskColor(simulationResults.totalRisk) }}>
+              <span className="risk-level-badge" style={{ backgroundColor: `${getRiskColor(simulationResults.totalRisk)}15`, color: getRiskColor(simulationResults.totalRisk), border: `1px solid ${getRiskColor(simulationResults.totalRisk)}30` }}>
                 {simulationResults.totalRisk < 20 ? 'LOW' : simulationResults.totalRisk < 40 ? 'MEDIUM' : 'CRITICAL'} ({Math.round(simulationResults.totalRisk)}%)
               </span>
             </div>
             
-            <div className="risk-breakdown-list">
-              <div className="risk-breakdown-item orange">
-                <div className="risk-info">
-                  <span><Bug size={14} /> Pest Risk</span>
-                  <span>{Math.round(simulationResults.pestRisk)}%</span>
+            <div className="risk-breakdown-grid">
+              <motion.div 
+                className="risk-metric-card"
+                whileHover={{ y: -5, backgroundColor: 'rgba(249, 115, 22, 0.05)' }}
+              >
+                <div className="risk-metric-header">
+                  <div className="risk-icon-box orange">
+                    <Bug size={18} />
+                  </div>
+                  <div className="risk-metric-info">
+                    <span className="label">Pest Risk</span>
+                    <strong className="value">{Math.round(simulationResults.pestRisk)}%</strong>
+                  </div>
                 </div>
                 <div className="mini-progress-bg">
                   <motion.div 
-                    className="mini-progress-fill" 
+                    className="mini-progress-fill orange" 
                     initial={{ width: 0 }}
-                    animate={{ width: `${simulationResults.pestRisk}%` }}
-                    transition={{ duration: 0.5 }}
+                    whileInView={{ width: `${simulationResults.pestRisk}%` }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
                   ></motion.div>
                 </div>
-              </div>
-              <div className="risk-breakdown-item blue">
-                <div className="risk-info">
-                  <span><CloudRain size={14} /> Rainfall Deviation</span>
-                  <span>{Math.round(simulationResults.rainRisk)}%</span>
+              </motion.div>
+
+              <motion.div 
+                className="risk-metric-card"
+                whileHover={{ y: -5, backgroundColor: 'rgba(59, 130, 246, 0.05)' }}
+              >
+                <div className="risk-metric-header">
+                  <div className="risk-icon-box blue">
+                    <CloudRain size={18} />
+                  </div>
+                  <div className="risk-metric-info">
+                    <span className="label">Rainfall</span>
+                    <strong className="value">{Math.round(simulationResults.rainRisk)}%</strong>
+                  </div>
                 </div>
                 <div className="mini-progress-bg">
                   <motion.div 
-                    className="mini-progress-fill" 
+                    className="mini-progress-fill blue" 
                     initial={{ width: 0 }}
-                    animate={{ width: `${simulationResults.rainRisk}%` }}
-                    transition={{ duration: 0.5 }}
+                    whileInView={{ width: `${simulationResults.rainRisk}%` }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
                   ></motion.div>
                 </div>
-              </div>
-              <div className="risk-breakdown-item yellow">
-                <div className="risk-info">
-                  <span><BarChart size={14} /> Market Volatility</span>
-                  <span>{Math.round(simulationResults.marketRisk)}%</span>
+              </motion.div>
+
+              <motion.div 
+                className="risk-metric-card"
+                whileHover={{ y: -5, backgroundColor: 'rgba(234, 179, 8, 0.05)' }}
+              >
+                <div className="risk-metric-header">
+                  <div className="risk-icon-box yellow">
+                    <BarChart size={18} />
+                  </div>
+                  <div className="risk-metric-info">
+                    <span className="label">Market</span>
+                    <strong className="value">{Math.round(simulationResults.marketRisk)}%</strong>
+                  </div>
                 </div>
                 <div className="mini-progress-bg">
                   <motion.div 
-                    className="mini-progress-fill" 
+                    className="mini-progress-fill yellow" 
                     initial={{ width: 0 }}
-                    animate={{ width: `${simulationResults.marketRisk}%` }}
-                    transition={{ duration: 0.5 }}
+                    whileInView={{ width: `${simulationResults.marketRisk}%` }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
                   ></motion.div>
                 </div>
-              </div>
+              </motion.div>
             </div>
 
             <div className="risk-bar-container">
@@ -423,9 +466,9 @@ const AIImpactDashboard = ({ onBack, t, farmerName, locationData }) => {
                 <motion.div 
                   className="risk-bar-fill"
                   initial={{ width: 0 }}
-                  animate={{ width: `${simulationResults.totalRisk}%` }}
+                  whileInView={{ width: `${simulationResults.totalRisk}%` }}
                   style={{ backgroundColor: getRiskColor(simulationResults.totalRisk) }}
-                  transition={{ duration: 0.5 }}
+                  transition={{ duration: 1, ease: "easeOut" }}
                 ></motion.div>
               </div>
               <div className="risk-labels">
@@ -480,9 +523,14 @@ const AIImpactDashboard = ({ onBack, t, farmerName, locationData }) => {
                   <h2><Zap size={20} className="text-yellow-400" /> What-If Scenario Simulator</h2>
                   <p>Adjust variables to see real-time impact on your farm's success</p>
                 </div>
-                <button className="reset-btn" onClick={() => { setRainModifier(0); setPriceModifier(0); }}>
+                <motion.button 
+                  className="reset-btn" 
+                  onClick={() => { setRainModifier(0); setPriceModifier(0); }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
                   <RefreshCw size={14} /> Reset
-                </button>
+                </motion.button>
               </div>
             </div>
             <div className="simulation-controls">
@@ -562,29 +610,34 @@ const AIImpactDashboard = ({ onBack, t, farmerName, locationData }) => {
           <motion.div 
             className="chart-container glass-card"
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1 }}
           >
             <div className="chart-header">
               <h3>7-Day Weather + Crop Risk</h3>
-              <Info size={16} className="text-gray-500" />
+              <div className="logic-tooltip">
+                <Info size={16} />
+                <span className="tooltip-text">Predictive risk analysis based on hyper-local weather sensors.</span>
+              </div>
             </div>
             <div className="chart-wrapper">
-              <ResponsiveContainer width="100%" height={220}>
+              <ResponsiveContainer width="100%" height={260}>
                 <AreaChart data={riskChartData}>
                   <defs>
                     <linearGradient id="colorRisk" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#22C55E" stopOpacity={0.3}/>
+                      <stop offset="5%" stopColor="#22C55E" stopOpacity={0.2}/>
                       <stop offset="95%" stopColor="#22C55E" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                  <XAxis dataKey="day" stroke="#888" fontSize={12} tickLine={false} axisLine={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+                  <XAxis dataKey="day" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} tickMargin={10} />
                   <YAxis hide domain={[0, 100]} />
                   <Tooltip 
-                    contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: '12px', padding: '12px' }}
-                    itemStyle={{ color: '#22C55E' }}
-                    cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 2 }}
+                    contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}
+                    itemStyle={{ color: '#4ade80', fontSize: '12px', fontWeight: '600' }}
+                    labelStyle={{ color: '#94a3b8', marginBottom: '4px', fontSize: '11px' }}
+                    cursor={{ stroke: 'rgba(255,255,255,0.05)', strokeWidth: 2 }}
                     formatter={(value) => [`${Math.round(value)}%`, 'Risk Level']}
                   />
                   <Area 
@@ -593,8 +646,8 @@ const AIImpactDashboard = ({ onBack, t, farmerName, locationData }) => {
                     stroke="#22C55E" 
                     fillOpacity={1} 
                     fill="url(#colorRisk)" 
-                    strokeWidth={3}
-                    animationDuration={1000}
+                    strokeWidth={2.5}
+                    animationDuration={1500}
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -604,33 +657,35 @@ const AIImpactDashboard = ({ onBack, t, farmerName, locationData }) => {
           <motion.div 
             className="chart-container glass-card"
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
           >
             <div className="chart-header">
-              <h3>30-Day Market Price Trend</h3>
-              <ArrowUpRight size={16} className={priceModifier >= 0 ? "text-green-500" : "text-red-500"} />
+              <h3>30-Day Export Price Trend</h3>
+              <ArrowUpRight size={18} className={priceModifier >= 0 ? "text-green-400" : "text-red-400"} />
             </div>
             <div className="chart-wrapper">
-              <ResponsiveContainer width="100%" height={220}>
+              <ResponsiveContainer width="100%" height={260}>
                 <LineChart data={marketData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                  <XAxis dataKey="day" stroke="#888" fontSize={12} tickLine={false} axisLine={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+                  <XAxis dataKey="day" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} tickMargin={10} />
                   <YAxis hide domain={['dataMin - 100', 'dataMax + 100']} />
                   <Tooltip 
-                    contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: '12px', padding: '12px' }}
-                    itemStyle={{ color: '#22C55E' }}
-                    cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 2 }}
+                    contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}
+                    itemStyle={{ color: priceModifier >= 0 ? '#4ade80' : '#f87171', fontSize: '12px', fontWeight: '600' }}
+                    labelStyle={{ color: '#94a3b8', marginBottom: '4px', fontSize: '11px' }}
+                    cursor={{ stroke: 'rgba(255,255,255,0.05)', strokeWidth: 2 }}
                     formatter={(value) => [`₹${Math.round(value)}`, 'Market Price']}
                   />
                   <Line 
                     type="monotone" 
                     dataKey="price" 
                     stroke={priceModifier >= 0 ? "#22C55E" : "#EF4444"} 
-                    strokeWidth={3} 
-                    dot={{ r: 4, fill: priceModifier >= 0 ? "#22C55E" : "#EF4444", strokeWidth: 0 }} 
-                    activeDot={{ r: 6, fill: '#fff', stroke: priceModifier >= 0 ? "#22C55E" : "#EF4444", strokeWidth: 2 }}
-                    animationDuration={1000}
+                    strokeWidth={2.5} 
+                    dot={{ r: 3, fill: priceModifier >= 0 ? "#22C55E" : "#EF4444", strokeWidth: 0 }} 
+                    activeDot={{ r: 5, fill: '#fff', stroke: priceModifier >= 0 ? "#22C55E" : "#EF4444", strokeWidth: 2 }}
+                    animationDuration={1500}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -668,6 +723,74 @@ const AIImpactDashboard = ({ onBack, t, farmerName, locationData }) => {
             </div>
           </motion.section>
         )}
+
+        <section className="opportunity-section">
+          <motion.div 
+            className="opportunity-highlight-card glass-card"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="card-header-flex">
+              <div className="header-text">
+                <div className="flex items-center gap-2 mb-1">
+                  <h2 className="text-xl font-bold text-white">Top Export Opportunity</h2>
+                  <span className="premium-tag">High Demand</span>
+                </div>
+                <p className="text-gray-400">
+                  Global Market • Premium {crop} Demand
+                </p>
+              </div>
+              <div className="header-actions">
+                <div className="ai-status-badge">
+                  <div className="blinking-dot"></div>
+                  <span>AI Recommended</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="opportunity-stats-premium mt-6">
+              <div className="opp-stat-item">
+                <span className="opp-label">Export Price</span>
+                <strong className="opp-value text-green-400">₹{(simulationResults.currentIncome / farmSize / 10).toFixed(0)}<span className="unit">/kg</span></strong>
+              </div>
+              <div className="opp-stat-item">
+                <span className="opp-label">Demand Score</span>
+                <strong className="opp-value text-blue-400">92<span className="unit">/100</span></strong>
+              </div>
+              <div className="opp-stat-item">
+                <span className="opp-label">Profit Uplift</span>
+                <strong className="opp-value text-emerald-400">+{simulationResults.profitPercentage}<span className="unit">%</span></strong>
+              </div>
+              <div className="opp-stat-item">
+                <span className="opp-label">Risk Level</span>
+                <strong className="opp-value text-yellow-400">Low</strong>
+              </div>
+            </div>
+
+            <div className="opportunity-footer mt-8">
+              <motion.button 
+                className="premium-action-btn primary" 
+                onClick={() => setShowOptimizeModal(true)}
+                whileHover={{ scale: 1.05, boxShadow: "0 0 25px rgba(34, 197, 94, 0.4)" }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Sparkles size={16} />
+                <span>Optimize Export Plan</span>
+              </motion.button>
+              <motion.button 
+                className="premium-action-btn" 
+                onClick={handleDownloadReport}
+                whileHover={{ scale: 1.05, border: "1px solid rgba(34, 197, 94, 0.4)" }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <FileText size={16} />
+                <span>Market Intelligence</span>
+              </motion.button>
+            </div>
+          </motion.div>
+        </section>
 
         <section className="ai-summary-section">
           <motion.div 
@@ -732,15 +855,31 @@ const AIImpactDashboard = ({ onBack, t, farmerName, locationData }) => {
                 </div>
               </div>
               <div className="footer-actions">
-                <button className="secondary-btn" onClick={() => setIsDetailedView(!isDetailedView)}>
+                <motion.button 
+                  className="premium-action-btn" 
+                  onClick={() => setIsDetailedView(!isDetailedView)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
                   {isDetailedView ? 'Hide Analysis' : 'View Detailed Analysis'}
-                </button>
-                <button className="report-btn" onClick={handleDownloadReport} disabled={isGeneratingReport}>
+                </motion.button>
+                <motion.button 
+                  className="premium-action-btn" 
+                  onClick={handleDownloadReport} 
+                  disabled={isGeneratingReport}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
                   {isGeneratingReport ? <><RefreshCw size={16} className="animate-spin" /> Generating...</> : <><Download size={16} /> Download Report</>}
-                </button>
-                <button className="action-btn primary-glow" onClick={() => setShowOptimizeModal(true)}>
+                </motion.button>
+                <motion.button 
+                  className="premium-action-btn primary" 
+                  onClick={() => setShowOptimizeModal(true)}
+                  whileHover={{ scale: 1.05, boxShadow: "0 0 25px rgba(34, 197, 94, 0.4)" }}
+                  whileTap={{ scale: 0.95 }}
+                >
                   <Sparkles size={16} /> Optimize Farm Plan
-                </button>
+                </motion.button>
               </div>
             </div>
           </motion.div>

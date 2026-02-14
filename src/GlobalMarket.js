@@ -362,97 +362,94 @@ const GlobalMarketHome = ({ t }) => {
         </div>
       </div>
 
-      {/* AI Recommendation Card */}
+      {/* Top Export Opportunity Card */}
       <motion.div 
-        className="ai-recommendation-hero glass-card premium-border mb-6"
-        initial={{ scale: 0.98, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
+        className="premium-recommendation-card glass-card mb-8"
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="recommendation-badge">AI Recommendation</div>
-        <div className="flex items-start gap-5">
-          <div className="ai-icon-wrapper-large">
-            <Target className="text-white" size={32} />
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <h2 className="text-2xl font-bold text-white">Recommended: {currentData.bestCountry} {currentData.flag}</h2>
-              <div className="high-demand-pulse">High Demand</div>
+        <div className="card-header-flex">
+          <div className="header-text">
+            <div className="flex items-center gap-2 mb-1">
+              <h2 className="text-xl font-bold text-white">Top Export Opportunity</h2>
+              <span className="premium-tag">High Demand</span>
             </div>
-            <p className="text-xl text-green-300 leading-relaxed mb-6">
-              Export <strong>{selectedCrop}</strong> this quarter due to {currentData.reason.toLowerCase()}
+            <p className="text-gray-400">
+              {currentData.bestCountry} {currentData.flag} • {currentData.reason}
             </p>
-            
-            <div className="ai-action-buttons mb-4">
-              <button className="premium-cta-btn" onClick={() => setExpandedRisk(!expandedRisk)}>
-                <Target size={18} />
-                <span>Why this market?</span>
-              </button>
-              <button className="premium-cta-btn" onClick={() => handleBuyerRequest(currentData.buyers[0])}>
-                <ShieldCheck size={18} />
-                <span>Request Buyer Connection</span>
-              </button>
-              <button className="premium-cta-btn" onClick={handleDownloadReport}>
-                <TrendingUp size={18} />
-                <span>Download Report</span>
-              </button>
-              <button className="premium-cta-btn" onClick={() => setShowLogisticsDrawer(true)}>
-                <Truck size={18} />
-                <span>View Logistics Plan</span>
-              </button>
-            </div>
-
-            <AnimatePresence>
-              {expandedRisk && (
-                <motion.div 
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="why-market-grid premium-expand-panel"
-                >
-                  <div className="why-item">
-                    <span className="label">Demand Score</span>
-                    <strong className="value text-green-400">{currentData.demandScore}/100</strong>
-                    <p className="text-xs text-gray-400 mt-1">Based on search volume and import growth.</p>
-                  </div>
-                  <div className="why-item">
-                    <span className="label">Risk Factors</span>
-                    <strong className={`value ${currentData.riskLevel === 'Low' ? 'text-green-400' : 'text-yellow-400'}`}>{currentData.riskLevel}</strong>
-                    <p className="text-xs text-gray-400 mt-1">Currency stability and trade policies.</p>
-                  </div>
-                  <div className="why-item">
-                    <span className="label">Competitor Regions</span>
-                    <strong className="value text-blue-400">Low</strong>
-                    <p className="text-xs text-gray-400 mt-1">Limited supply from rival regions.</p>
-                  </div>
-                  <div className="why-item">
-                    <span className="label">Seasonal Advantage</span>
-                    <strong className="value text-purple-400">Peak</strong>
-                    <p className="text-xs text-gray-400 mt-1">Off-season in Northern Hemisphere.</p>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+          </div>
+          <div className="header-actions">
+            <button className="subtle-action-btn" onClick={() => setExpandedRisk(!expandedRisk)}>
+              <Info size={16} />
+              <span>Market Insights</span>
+            </button>
           </div>
         </div>
-        <div className="ai-insight-grid-large mt-8">
-          <div className="insight-stat-v2">
+
+        <div className="opportunity-stats mt-6">
+          <div className="opp-stat">
             <span className="label">Potential Earnings</span>
-            <strong className="value">{currentData.netEarnings}</strong>
+            <strong className="value text-green-400">{currentData.netEarnings}</strong>
           </div>
-          <div className="insight-stat-v2">
-            <span className="label">Logistics Cost</span>
-            <strong className="value">{currentData.logisticsCost}</strong>
-          </div>
-          <div className="insight-stat-v2">
+          <div className="opp-stat">
             <span className="label">Export Price</span>
             <strong className="value">₹{currentData.exportPrice}/kg</strong>
           </div>
-          <div className="insight-stat-v2">
-            <span className="label">Mandi Price</span>
-            <strong className="value">₹{currentData.domesticPrice}/kg</strong>
+          <div className="opp-stat">
+            <span className="label">Logistics</span>
+            <strong className="value">{currentData.logisticsCost}</strong>
+          </div>
+          <div className="opp-stat">
+            <span className="label">Demand Score</span>
+            <strong className="value text-blue-400">{currentData.demandScore}/100</strong>
           </div>
         </div>
+
+        <div className="card-footer-actions mt-8">
+          <button className="premium-glow-btn" onClick={() => handleBuyerRequest(currentData.buyers[0])}>
+            <ShieldCheck size={18} />
+            <span>Request Connection</span>
+          </button>
+          <button className="secondary-glass-btn" onClick={handleDownloadReport}>
+            <TrendingUp size={18} />
+            <span>Market Report</span>
+          </button>
+          <button className="secondary-glass-btn" onClick={() => setShowLogisticsDrawer(true)}>
+            <Truck size={18} />
+            <span>Logistics Plan</span>
+          </button>
+        </div>
+
+        <AnimatePresence>
+          {expandedRisk && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="market-details-expand mt-6"
+            >
+              <div className="why-market-grid-premium">
+                <div className="why-item-premium">
+                  <span className="label">Risk Level</span>
+                  <strong className={`value ${currentData.riskLevel === 'Low' ? 'text-green-400' : 'text-yellow-400'}`}>{currentData.riskLevel}</strong>
+                </div>
+                <div className="why-item-premium">
+                  <span className="label">Competition</span>
+                  <strong className="value text-blue-400">Low</strong>
+                </div>
+                <div className="why-item-premium">
+                  <span className="label">Seasonality</span>
+                  <strong className="value text-purple-400">Peak</strong>
+                </div>
+                <div className="why-item-premium">
+                  <span className="label">Mandi Price</span>
+                  <strong className="value">₹{currentData.domesticPrice}/kg</strong>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
 
       {/* Logistics Side Drawer */}
