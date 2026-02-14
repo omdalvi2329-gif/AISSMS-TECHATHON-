@@ -46,9 +46,9 @@ const SeasonalAdvice = ({ onBack, locationData }) => {
         message = `${month} is manageable for ${cropName}, but late sowing might affect yield.`;
       } else {
         suitability = 20;
+        message = `Not recommended. ${month} is too hot for ${cropName} development.`;
         profitRange = "Potential Loss";
         risk = "High (Temperature Mismatch)";
-        message = `Not recommended. ${month} is too hot for ${cropName} development.`;
       }
     } else if (crop.type === "Kharif") {
       if (["June", "July"].includes(month)) {
@@ -59,9 +59,9 @@ const SeasonalAdvice = ({ onBack, locationData }) => {
         message = `${month} is okay, but ensure proper drainage during heavy rains.`;
       } else {
         suitability = 15;
+        message = `Off-season for ${cropName}. Requires heavy irrigation and pest control.`;
         profitRange = "Potential Loss";
         risk = "High (Water Scarcity/Heat)";
-        message = `Off-season for ${cropName}. Requires heavy irrigation and pest control.`;
       }
     } else {
       suitability = 80;
@@ -98,37 +98,41 @@ const SeasonalAdvice = ({ onBack, locationData }) => {
           <span>Back</span>
         </button>
         <div className="title-area">
-          <Sprout className="header-icon" />
+          <Sprout className="header-icon" size={24} />
           <h1>Seasonal Farming Advice</h1>
         </div>
       </header>
 
       <main className="advice-content">
-        <div className="left-panel">
+        <aside className="left-panel">
           <div className="input-card glass-card">
             <div className="input-group">
               <label><Calendar size={18} /> Mahina Chune (Select Month)</label>
-              <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>
-                {months.map(m => <option key={m} value={m}>{m}</option>)}
-              </select>
+              <div className="select-wrapper">
+                <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>
+                  {months.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
             </div>
 
             <div className="input-group">
               <label><Sprout size={18} /> Fasal Chune (Select Crop)</label>
-              <select value={selectedCrop} onChange={(e) => setSelectedCrop(e.target.value)}>
-                <option value="">-- Choose Crop --</option>
-                {cropsData.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
-              </select>
+              <div className="select-wrapper">
+                <select value={selectedCrop} onChange={(e) => setSelectedCrop(e.target.value)}>
+                  <option value="">-- Choose Crop --</option>
+                  {cropsData.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+                </select>
+              </div>
             </div>
 
             <div className="location-footer">
               <MapPin size={16} />
-              <span>{locationData?.village || "Amman"}, {locationData?.district || "Pune"}, {locationData?.state || "Maharashtra"}</span>
+              <span>{locationData?.village || "Lohegaon"}, {locationData?.district || "Pune"}, {locationData?.state || "Maharashtra"}</span>
             </div>
           </div>
-        </div>
+        </aside>
 
-        <div className="right-panel">
+        <section className="right-panel">
           {!selectedCrop ? (
             <div className="empty-output glass-card">
               <Info size={48} className="info-icon" />
@@ -143,8 +147,10 @@ const SeasonalAdvice = ({ onBack, locationData }) => {
             <div className="advice-results">
               <div className="result-card glass-card fade-in">
                 <div className="section-header">
-                  <TrendingUp size={20} />
-                  <h3>Crop Suitability</h3>
+                  <div className="header-left">
+                    <TrendingUp size={18} />
+                    <h3>Crop Suitability</h3>
+                  </div>
                 </div>
                 <div className="suitability-bar">
                   <div className="bar-fill" style={{ width: `${advice.suitability}%` }}></div>
@@ -153,33 +159,39 @@ const SeasonalAdvice = ({ onBack, locationData }) => {
                 <p className="description">{advice.message}</p>
               </div>
 
-              <div className="result-card glass-card fade-in delay-1">
+              <div className="result-card glass-card fade-in">
                 <div className="section-header">
-                  <TrendingUp size={20} />
-                  <h3>Expected Profit</h3>
+                  <div className="header-left">
+                    <TrendingUp size={18} />
+                    <h3>Expected Profit</h3>
+                  </div>
                 </div>
                 <p className="profit-value">{advice.profitRange}</p>
                 <p className="unit">per acre estimate</p>
               </div>
 
-              <div className="result-card glass-card fade-in delay-2">
+              <div className="result-card glass-card fade-in">
                 <div className="section-header">
-                  <AlertTriangle size={20} />
-                  <h3>Risk Factors</h3>
+                  <div className="header-left">
+                    <AlertTriangle size={18} />
+                    <h3>Risk Factors</h3>
+                  </div>
                 </div>
                 <p className="risk-value">{advice.risk}</p>
               </div>
 
-              <div className="result-card glass-card highlight-card fade-in delay-3">
+              <div className="result-card glass-card highlight-card fade-in">
                 <div className="section-header">
-                  <Lightbulb size={20} />
-                  <h3>AI Recommendation</h3>
+                  <div className="header-left">
+                    <Lightbulb size={18} />
+                    <h3>AI Recommendation</h3>
+                  </div>
                 </div>
                 <p className="hinglish-advice">{advice.hinglish}</p>
               </div>
             </div>
           )}
-        </div>
+        </section>
       </main>
     </div>
   );

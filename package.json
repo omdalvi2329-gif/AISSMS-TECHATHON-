@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
+    "@supabase/supabase-js": "^2.95.3",
     "framer-motion": "^6.5.1",
     "lucide-react": "^0.563.0",
     "mapbox-gl": "^1.13.3",
