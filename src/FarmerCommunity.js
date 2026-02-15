@@ -15,8 +15,9 @@ import {
   ShieldCheck,
   TrendingDown,
   Info,
-  Crown,
-  Medal
+  Heart,
+  Share2,
+  X
 } from 'lucide-react';
 import './FarmerCommunity.css';
 
@@ -71,7 +72,11 @@ const INITIAL_POSTS = [
     hasVoice: true,
     images: ["/images/1.jpg"], // Using image from public folder
     qualityBadge: "Water Efficient",
-    isPremium: true
+    isPremium: true,
+    likes: 45,
+    comments: 12,
+    shares: 5,
+    liked: false
   },
   {
     id: 2,
@@ -87,7 +92,11 @@ const INITIAL_POSTS = [
     hasVoice: false,
     images: ["/images/2.avif"], // 2. Farmer in field
     qualityBadge: "Sustainable Choice",
-    isPremium: true
+    isPremium: true,
+    likes: 45,
+    comments: 12,
+    shares: 5,
+    liked: false
   },
   {
     id: 3,
@@ -135,7 +144,11 @@ const INITIAL_POSTS = [
     hasVoice: true,
     images: ["/images/5.jpg"], // 5. Farmer with cotton
     qualityBadge: "High Productivity",
-    isPremium: true
+    isPremium: true,
+    likes: 45,
+    comments: 12,
+    shares: 5,
+    liked: false
   },
   {
     id: 6,
@@ -215,7 +228,11 @@ const INITIAL_POSTS = [
     hasVoice: false,
     images: ["/images/10.jpg"], // 10. Soybean field rows
     qualityBadge: "Smart Farming",
-    isPremium: true
+    isPremium: true,
+    likes: 45,
+    comments: 12,
+    shares: 5,
+    liked: false
   }
 ];
 const ENCOURAGE_OPTIONS = [
@@ -235,6 +252,9 @@ const FarmerCommunity = ({ onBack, farmerName }) => {
   const [activePostId, setActivePostId] = useState(null);
   const [rankFilter, setRankFilter] = useState('today'); 
   const [encouragedPosts, setEncouragedPosts] = useState(new Set());
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [activeCommentPostId, setActiveCommentPostId] = useState(null);
+  const [commentText, setCommentText] = useState('');
   
   const recognitionRef = useRef(null);
 
@@ -291,6 +311,52 @@ const FarmerCommunity = ({ onBack, farmerName }) => {
     setNewPostText('');
     setSelectedImages([]);
     setIsRecording(false);
+  };
+
+  const handleLike = (postId) => {
+    setPosts(posts.map(post => {
+      if (post.id === postId) {
+        return {
+          ...post,
+          likes: post.liked ? post.likes - 1 : post.likes + 1,
+          liked: !post.liked
+        };
+      }
+      return post;
+    }));
+  };
+
+  const handleShare = (postId) => {
+    setPosts(posts.map(post => {
+      if (post.id === postId) {
+        return {
+          ...post,
+          shares: (post.shares || 0) + 1
+        };
+      }
+      return post;
+    }));
+    setShowShareModal(true);
+  };
+
+  const handleCommentSubmit = (postId) => {
+    if (!commentText.trim()) return;
+    setPosts(posts.map(post => {
+      if (post.id === postId) {
+        return {
+          ...post,
+          comments: (post.comments || 0) + 1
+        };
+      }
+      return post;
+    }));
+    setCommentText('');
+    setActiveCommentPostId(null);
+  };
+
+  const calculateImpactScore = (post) => {
+    const score = ((post.likes || 0) * 2) + ((post.comments || 0) * 3) + ((post.shares || 0) * 4);
+    return Math.floor(score + 450);
   };
 
   const handleEncourageClick = (postId) => {
@@ -399,83 +465,108 @@ const FarmerCommunity = ({ onBack, farmerName }) => {
             {/* Posts List */}
             <div className="posts-list">
               {posts.map((post) => (
-                <div key={post.id} className="post-card glass-card scroll-reveal">
+                <div key={post.id} className="post-card-premium glass-card-premium scroll-reveal">
                   <div className="post-header-premium">
                     <div className="farmer-meta">
-                      <div className="avatar-circle">
+                      <div className="avatar-circle-premium">
                         {post.name[0]}
                       </div>
-                      <div className="meta-text">
-                        <h3>{post.name} {post.isPremium && <Sparkles size={12} className="inline text-yellow-500" />}</h3>
-                        <p className="location-time">📍 {post.location} • {post.timestamp}</p>
+                      <div className="meta-text-premium">
+                        <h3>{post.name} {post.isPremium && <ShieldCheck size={14} className="verified-icon" />}</h3>
+                        <p className="location-time-premium">{post.location} • {post.timestamp}</p>
                       </div>
                     </div>
-                    <div className="activity-badge">{post.activity}</div>
+                    <div className="activity-pill">{post.activity}</div>
                   </div>
                   
-                  <div className="post-content">
-                    <div className="crop-tag">Crop: {post.crop}</div>
-                    {post.text && <p className="post-text">{post.text}</p>}
+                  <div className="post-content-premium">
+                    <div className="post-divider-thin"></div>
+                    <div className="crop-tag-premium">
+                      <Leaf size={12} />
+                      <span>{post.crop}</span>
+                    </div>
+                    {post.text && <p className="post-text-premium">{post.text}</p>}
                     
                     {post.images.length > 0 && (
-                      <div className="post-media-grid">
+                      <div className="post-media-premium">
                         {post.images.map((img, i) => (
-                          <div key={i} className="post-image-container">
-                            <img src={img} alt="Farm" className="post-image" />
+                          <div key={i} className="image-wrapper-premium">
+                            <img src={img} alt="Farm Update" className="post-img-premium" />
                           </div>
                         ))}
                       </div>
                     )}
 
-                    <div className="meta-row">
-                      {post.hasVoice && (
-                        <div className="voice-indicator">
-                          <Mic size={14} />
-                          <span>Voice Update</span>
-                        </div>
-                      )}
+                    {/* Modern Social Interaction Bar */}
+                    <div className="social-interaction-bar-premium">
+                      <div className="interaction-left">
+                        <button 
+                          className={`interaction-btn-premium like ${post.liked ? 'active' : ''}`}
+                          onClick={() => handleLike(post.id)}
+                        >
+                          <Heart size={18} fill={post.liked ? "#ff4b4b" : "transparent"} stroke={post.liked ? "#ff4b4b" : "currentColor"} />
+                          <span className="interaction-count">{post.likes}</span>
+                        </button>
+                        
+                        <button 
+                          className={`interaction-btn-premium comment ${activeCommentPostId === post.id ? 'active' : ''}`}
+                          onClick={() => setActiveCommentPostId(activeCommentPostId === post.id ? null : post.id)}
+                        >
+                          <MessageSquare size={18} />
+                          <span className="interaction-count">{post.comments}</span>
+                        </button>
 
-                      {post.qualityBadge && (
-                        <div className="ai-quality-badge">
-                          <ShieldCheck size={14} />
-                          <span>AI: {post.qualityBadge}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                        <button 
+                          className="interaction-btn-premium share"
+                          onClick={() => handleShare(post.id)}
+                        >
+                          <Share2 size={18} />
+                          <span className="interaction-count">{post.shares}</span>
+                        </button>
+                      </div>
 
-                  <div className="post-footer-premium">
-                    <div className="post-stats-premium">
-                      <div className="stat-pill">
-                        <Star size={14} fill="#22c55e" className="text-green-500" />
-                        <span>{post.stars.toFixed(1)}</span>
-                      </div>
-                      <div className="stat-pill">
-                        <Leaf size={14} />
-                        <span>{post.encouragements}</span>
-                      </div>
-                      <div className="stat-pill">
-                        <CheckCircle2 size={14} />
-                        <span>{post.verifiedCount}</span>
+                      <div className="interaction-right">
+                        <div className="ai-impact-badge-v2" title="Calculated based on real community engagement and farming impact.">
+                          <Sparkles size={12} className="sparkle-icon" />
+                          <span>Impact: {calculateImpactScore(post)}</span>
+                          <div className="impact-glow-v2"></div>
+                        </div>
                       </div>
                     </div>
-                    
-                    <button 
-                      className={`encourage-btn ${encouragedPosts.has(post.id) ? 'disabled active' : ''}`}
-                      onClick={() => handleEncourageClick(post.id)}
-                    >
-                      {encouragedPosts.has(post.id) ? (
-                        <>
-                          <CheckCircle2 size={16} />
-                          <span>Encouraged</span>
-                        </>
-                      ) : (
-                        <>
-                          <Award size={16} />
-                          <span>Encourage</span>
-                        </>
-                      )}
-                    </button>
+
+                    <div className="social-controls-premium-secondary">
+                      <button 
+                        className={`encourage-pill-premium ${encouragedPosts.has(post.id) ? 'active' : ''}`}
+                        onClick={() => handleEncourageClick(post.id)}
+                      >
+                        {encouragedPosts.has(post.id) ? (
+                          <><CheckCircle2 size={16} /><span>Awarded</span></>
+                        ) : (
+                          <><Award size={16} /><span>Encourage</span></>
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Sliding Comment Input */}
+                    {activeCommentPostId === post.id && (
+                      <div className="comment-input-area-premium">
+                        <input 
+                          type="text" 
+                          placeholder="Write a thoughtful comment..." 
+                          value={commentText}
+                          onChange={(e) => setCommentText(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && handleCommentSubmit(post.id)}
+                          autoFocus
+                        />
+                        <button 
+                          className="send-comment-btn" 
+                          disabled={!commentText.trim()}
+                          onClick={() => handleCommentSubmit(post.id)}
+                        >
+                          <Send size={16} />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -483,6 +574,12 @@ const FarmerCommunity = ({ onBack, farmerName }) => {
           </div>
         ) : (
           <div className="rankings-container">
+            {/* Rankings Header */}
+            <div className="rankings-hero glass-card-premium">
+              <div className="hero-badge">AI Verified Excellence</div>
+              <h2>Community Leaders</h2>
+              <p>Top performing farmers based on impact, sustainability & engagement</p>
+            </div>
             <div className="ranking-filters">
               {['today', 'week', 'month'].map(filter => (
                 <button 
@@ -550,6 +647,32 @@ const FarmerCommunity = ({ onBack, farmerName }) => {
                   <span className="option-label">{option.label}</span>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Share Modal */}
+      {showShareModal && (
+        <div className="modal-overlay-premium" onClick={() => setShowShareModal(false)}>
+          <div className="share-modal glass-card-premium" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Share Post</h3>
+              <button className="close-modal" onClick={() => setShowShareModal(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className="share-options-grid">
+              <button className="share-option-btn" onClick={() => {
+                navigator.clipboard.writeText(window.location.href);
+                setShowShareModal(false);
+              }}>
+                <div className="share-icon-circle"><Share2 size={20} /></div>
+                <span>Copy Link</span>
+              </button>
+              <button className="share-option-btn">
+                <div className="share-icon-circle"><MessageSquare size={20} /></div>
+                <span>Share Internally</span>
+              </button>
             </div>
           </div>
         </div>

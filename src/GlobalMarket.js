@@ -10,7 +10,6 @@ import {
   TrendingUp,
   ChevronRight,
   X,
-  Target,
   Info,
   Truck,
   ShieldCheck,
