@@ -130,9 +130,12 @@ const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNaviga
           <Menu size={28} />
         </button>
         
-        <div className="app-logo">
-          <span className="logo-text">AgriSetu</span>
-          <div className="logo-dot"></div>
+        <div className="app-logo" aria-label="AgriSetu">
+          <div className="agrisetu-logo" role="img" aria-hidden="true">
+            <span className="agrisetu-logo__sun" />
+            <span className="agrisetu-logo__leaf" />
+          </div>
+          <span className="agrisetu-wordmark">AgriSetu</span>
         </div>
 
         <div className="header-right">

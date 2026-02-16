@@ -587,7 +587,7 @@ const GlobalMarketHome = ({ t }) => {
             </div>
           </div>
           <div className="chart-wrapper-v2" style={{ height: '300px', minHeight: '300px' }}>
-            <ResponsiveContainer width="100%" height="100%" minHeight={300}>
+            <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={currentData.priceTrends[timeFilter]}>
                 <defs>
                   <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">

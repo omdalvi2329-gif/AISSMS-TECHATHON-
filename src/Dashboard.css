@@ -35,6 +35,102 @@
   transition: background-color 250ms ease, border-color 250ms ease;
 }
 
+ .icon-button.menu-btn {
+  background: #064e3b;
+  border-radius: 999px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+  color: #facc15;
+  transition: background-color 0.3s, box-shadow 0.3s, color 0.3s;
+ }
+
+ .icon-button.menu-btn:hover {
+  background: #022c22;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.45);
+  color: #facc15;
+ }
+
+ .app-logo {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  max-width: calc(100% - 220px);
+  padding: 6px 10px;
+  border-radius: 14px;
+  cursor: default;
+  transition: transform 180ms ease, filter 220ms ease;
+ }
+
+ .app-logo:hover {
+  transform: translateX(-50%) scale(1.03);
+  filter: drop-shadow(0 0 10px rgba(34, 197, 94, 0.25));
+ }
+
+ .agrisetu-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  position: relative;
+  flex: 0 0 auto;
+  background: radial-gradient(circle at 30% 30%, rgba(253, 224, 71, 0.18), rgba(34, 197, 94, 0.10) 55%, rgba(0, 0, 0, 0) 70%);
+ }
+
+ .agrisetu-logo__sun {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  top: 9px;
+  left: 10px;
+  background: radial-gradient(circle at 30% 30%, #fde047, #f59e0b);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.35);
+ }
+
+ .agrisetu-logo__leaf {
+  position: absolute;
+  width: 22px;
+  height: 16px;
+  border-radius: 22px 0 22px 0;
+  bottom: 10px;
+  right: 9px;
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  transform: rotate(-18deg);
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.25);
+ }
+
+ .agrisetu-wordmark {
+  font-weight: 900;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: linear-gradient(90deg, #22c55e 0%, #a3e635 45%, #fde047 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+ }
+
+ @media (max-width: 520px) {
+  .app-logo {
+    gap: 10px;
+    max-width: calc(100% - 170px);
+  }
+
+  .agrisetu-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+  }
+
+  .agrisetu-wordmark {
+    font-size: 18px;
+  }
+ }
+
 /* Premium Sidebar Drawer Redesign - Modern Black/Green */
 .sidebar-overlay-modern {
   position: fixed;
@@ -53,8 +149,8 @@
   left: 0;
   bottom: 0;
   width: 340px;
-  background: #0B0F0C;
-  border-right: 1px solid rgba(34, 197, 94, 0.1);
+  background: #111827;
+  border-right: 1px solid #2d3748;
   box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
   z-index: 2001;
   overflow: hidden;
@@ -64,7 +160,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: linear-gradient(135deg, #0B0F0C 0%, #0d1a0d 100%);
+  background: #111827;
 }
 
 .drawer-header-modern {
@@ -116,7 +212,7 @@
 .profile-text-modern h3 {
   margin: 0;
   font-size: 1.25rem;
-  color: #fff;
+  color: #e5e7eb;
   font-weight: 700;
 }
 
@@ -159,7 +255,7 @@
   padding: 1rem 1.2rem;
   background: none;
   border: none;
-  color: #888;
+  color: #e5e7eb;
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.3s;
@@ -176,9 +272,9 @@
   transition: all 0.3s;
 }
 
-.nav-item-modern:hover {
-  background: rgba(34, 197, 94, 0.08);
-  color: #fff;
+.nav-item-modern:not(.logout-item-modern):hover {
+  background: #1f2937;
+  color: #22c55e;
   transform: translateX(8px);
 }
 

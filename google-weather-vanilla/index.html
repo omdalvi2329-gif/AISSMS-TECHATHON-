@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Google-Style Weather</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">Weather</div>
+
+        <form id="searchForm" class="search" autocomplete="off">
+          <input
+            id="cityInput"
+            class="search__input"
+            type="text"
+            placeholder="Search city (Pune, Mumbai, Delhi...)"
+            aria-label="Search city"
+          />
+          <button class="search__btn" type="submit">Search</button>
+        </form>
+      </header>
+
+      <main class="content">
+        <section id="status" class="status" aria-live="polite"></section>
+
+        <section id="currentCard" class="card current" hidden>
+          <div class="current__left">
+            <div class="current__city" id="cityName">--</div>
+            <div class="current__row">
+              <div class="current__temp" id="temp">--°</div>
+              <div class="current__iconWrap">
+                <img id="icon" class="current__icon" alt="" />
+              </div>
+            </div>
+            <div class="current__condition" id="condition">--</div>
+            <div class="current__meta" id="meta">--</div>
+          </div>
+
+          <div class="current__right">
+            <div class="metric">
+              <div class="metric__label">Feels like</div>
+              <div class="metric__value" id="feelsLike">--</div>
+            </div>
+            <div class="metric">
+              <div class="metric__label">Humidity</div>
+              <div class="metric__value" id="humidity">--</div>
+            </div>
+            <div class="metric">
+              <div class="metric__label">Wind</div>
+              <div class="metric__value" id="wind">--</div>
+            </div>
+          </div>
+        </section>
+
+        <section id="forecastCard" class="card forecast" hidden>
+          <div class="sectionTitle">Next days</div>
+          <div id="forecastScroll" class="forecast__scroll" aria-label="Forecast"></div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        Powered by OpenWeatherMap
+      </footer>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
