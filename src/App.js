@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { translations, languages } from './translations';
 import Dashboard from './Dashboard';
-import Weather from './Weather';
+import WeatherDashboard from './weather/WeatherDashboard';
 import GlobalMarket from './GlobalMarket';
 import AIChatPage from './AIChatPage';
 import AIImpactDashboard from './AIImpactDashboard';
@@ -21,6 +21,9 @@ function App() {
   const [currentPage, setCurrentPage] = useState('login'); // 'login', 'onboarding', 'dashboard', 'weather', 'market', 'seasonal-advice', 'settings', 'farmer-profile', 'ai-impact'
   const [userName, setUserName] = useState('');
   const [onboardingData, setOnboardingData] = useState(null);
+  const [isOverviewVideoOpen, setIsOverviewVideoOpen] = useState(false);
+  const [overviewVideoNonce, setOverviewVideoNonce] = useState(0);
+  const [overviewVideoError, setOverviewVideoError] = useState('');
   const [formData, setFormData] = useState({
     fullName: '',
     mobileNumber: '',
@@ -199,18 +202,22 @@ function App() {
                      /^\d{10}$/.test(formData.mobileNumber) && 
                      formData.termsAccepted;
 
+  const overviewVideoUrl = '/overview.mp4';
+  const isLocalMp4 = typeof overviewVideoUrl === 'string' && overviewVideoUrl.toLowerCase().endsWith('.mp4');
+  const overviewVideoSrc = isLocalMp4 ? `${overviewVideoUrl}?v=${overviewVideoNonce}` : overviewVideoUrl;
+
   if (currentPage === 'onboarding') {
     return <FarmerOnboarding onComplete={handleOnboardingComplete} t={t} />;
   }
 
   if (isLoggedIn) {
     if (currentPage === 'weather') {
-      return <Weather onBack={navigateToDashboard} t={t} />;
+      return <WeatherDashboard onBack={navigateToDashboard} t={t} currentLanguage={currentLanguage} />;
     }
     if (currentPage === 'market') {
       return (
         <div style={{ backgroundColor: '#0a0e0a', minHeight: '100vh' }}>
-          <button 
+          <button
             onClick={navigateToDashboard}
             style={{
               position: 'fixed',
@@ -245,10 +252,10 @@ function App() {
     }
     if (currentPage === 'settings') {
       return (
-        <Settings 
-          onBack={navigateToDashboard} 
-          t={t} 
-          currentLanguage={currentLanguage} 
+        <Settings
+          onBack={navigateToDashboard}
+          t={t}
+          currentLanguage={currentLanguage}
           onLanguageChange={handleLanguageChange}
           farmerName={userName}
           locationData={onboardingData}
@@ -258,9 +265,9 @@ function App() {
 
     if (currentPage === 'farmer-profile') {
       return (
-        <FarmerProfile 
-          onBack={navigateToDashboard} 
-          t={t} 
+        <FarmerProfile
+          onBack={navigateToDashboard}
+          t={t}
           farmerName={userName}
           locationData={onboardingData}
         />
@@ -269,9 +276,9 @@ function App() {
 
     if (currentPage === 'ai-impact') {
       return (
-        <AIImpactDashboard 
-          onBack={navigateToDashboard} 
-          t={t} 
+        <AIImpactDashboard
+          onBack={navigateToDashboard}
+          t={t}
           farmerName={userName}
           locationData={onboardingData}
         />
@@ -279,10 +286,10 @@ function App() {
     }
 
     return (
-      <Dashboard 
-        onLogout={handleLogout} 
-        onNavigateToWeather={navigateToWeather} 
-        onNavigateToMarket={navigateToMarket} 
+      <Dashboard
+        onLogout={handleLogout}
+        onNavigateToWeather={navigateToWeather}
+        onNavigateToMarket={navigateToMarket}
         onNavigateToGlobalMarket={navigateToGlobalMarket}
         onNavigateToCommunity={navigateToCommunity}
         onNavigateToAIChat={navigateToAIChat}
@@ -303,6 +310,19 @@ function App() {
     <div className="app-container">
       {/* Header with Language Selector */}
       <header className="header">
+        <button
+          type="button"
+          className="overview-video-btn"
+          onClick={() => {
+            setOverviewVideoNonce(Date.now());
+            setOverviewVideoError('');
+            setIsOverviewVideoOpen(true);
+          }}
+          aria-label="Watch app overview"
+          title="Watch app overview"
+        >
+          ▶
+        </button>
         <select
           className="language-selector"
           value={currentLanguage}
@@ -393,6 +413,64 @@ function App() {
           </form>
         </div>
       </main>
+
+      {isOverviewVideoOpen && (
+        <div
+          className="video-modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setIsOverviewVideoOpen(false)}
+        >
+          <div
+            className="video-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="video-modal__header">
+              <div className="video-modal__title">App Overview</div>
+              <button
+                type="button"
+                className="video-modal__close"
+                onClick={() => setIsOverviewVideoOpen(false)}
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+            {overviewVideoUrl ? (
+              <div className="video-modal__body">
+                {isLocalMp4 ? (
+                  <>
+                    <video
+                      className="video-modal__video"
+                      src={overviewVideoSrc}
+                      controls
+                      onError={() => {
+                        setOverviewVideoError('Video could not be loaded. Please confirm public/overview.mp4 exists and is not empty, then restart the dev server and hard refresh.');
+                      }}
+                    />
+                    {overviewVideoError && (
+                      <div className="video-modal__error">{overviewVideoError}</div>
+                    )}
+                  </>
+                ) : (
+                  <iframe
+                    className="video-modal__frame"
+                    src={overviewVideoSrc}
+                    title="App Overview Video"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  />
+                )}
+              </div>
+            ) : (
+              <div className="video-modal__empty">
+                Add your overview video source in App.js (`overviewVideoUrl`). For local video, copy the mp4 into `public/` and set it to `/overview.mp4`.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

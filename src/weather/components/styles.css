@@ -1,0 +1,134 @@
+.agri-bgfx {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.agri-bgfx__layer {
+  position: absolute;
+  inset: -40vh -40vw;
+  opacity: 0.65;
+  filter: blur(40px);
+}
+
+.agri-bgfx__layer--a {
+  background: radial-gradient(circle at 20% 20%, rgba(34, 197, 94, 0.22), rgba(34, 197, 94, 0.0) 55%),
+    radial-gradient(circle at 75% 30%, rgba(56, 189, 248, 0.14), rgba(56, 189, 248, 0.0) 60%),
+    radial-gradient(circle at 40% 85%, rgba(16, 185, 129, 0.18), rgba(16, 185, 129, 0.0) 55%);
+  animation: agriLayerA 18s ease-in-out infinite;
+}
+
+.agri-bgfx__layer--b {
+  background: radial-gradient(circle at 70% 70%, rgba(34, 197, 94, 0.18), rgba(34, 197, 94, 0.0) 58%),
+    radial-gradient(circle at 25% 60%, rgba(34, 197, 94, 0.10), rgba(34, 197, 94, 0.0) 55%);
+  opacity: 0.55;
+  animation: agriLayerB 22s ease-in-out infinite;
+}
+
+@keyframes agriLayerA {
+  0% { transform: translate3d(-2%, -1%, 0) scale(1); }
+  50% { transform: translate3d(2%, 1%, 0) scale(1.02); }
+  100% { transform: translate3d(-2%, -1%, 0) scale(1); }
+}
+
+@keyframes agriLayerB {
+  0% { transform: translate3d(2%, 1%, 0) scale(1.02); }
+  50% { transform: translate3d(-2%, -1%, 0) scale(1); }
+  100% { transform: translate3d(2%, 1%, 0) scale(1.02); }
+}
+
+.agri-bgfx__leaf-pattern {
+  position: absolute;
+  inset: 0;
+  opacity: 0.22;
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(34, 197, 94, 0.18) 1px, rgba(0,0,0,0) 1.6px);
+  background-size: 24px 24px;
+  mix-blend-mode: screen;
+}
+
+.agri-bgfx__cloud {
+  position: absolute;
+  width: 260px;
+  height: 90px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 35%, rgba(255,255,255,0.16), rgba(255,255,255,0.04) 55%, rgba(255,255,255,0.0) 72%),
+    radial-gradient(circle at 65% 55%, rgba(255,255,255,0.12), rgba(255,255,255,0.0) 68%);
+  filter: blur(2px);
+  opacity: 0.0;
+}
+
+.agri-bgfx__cloud--1 {
+  top: 14vh;
+  left: -20vw;
+  animation: agriCloud1 26s linear infinite;
+}
+
+.agri-bgfx__cloud--2 {
+  top: 28vh;
+  left: -35vw;
+  width: 340px;
+  height: 110px;
+  animation: agriCloud2 32s linear infinite;
+}
+
+@keyframes agriCloud1 {
+  0% { transform: translateX(-30vw); opacity: 0; }
+  10% { opacity: 0.25; }
+  90% { opacity: 0.18; }
+  100% { transform: translateX(160vw); opacity: 0; }
+}
+
+@keyframes agriCloud2 {
+  0% { transform: translateX(-40vw); opacity: 0; }
+  12% { opacity: 0.18; }
+  90% { opacity: 0.14; }
+  100% { transform: translateX(170vw); opacity: 0; }
+}
+
+.agri-bgfx__rain {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background-image:
+    repeating-linear-gradient(110deg, rgba(255, 255, 255, 0.10) 0, rgba(255, 255, 255, 0.10) 1px, rgba(255, 255, 255, 0.0) 1px, rgba(255, 255, 255, 0.0) 12px);
+  transform: translateY(-24px);
+}
+
+.agri-bgfx--rain .agri-bgfx__rain,
+.agri-bgfx--storm .agri-bgfx__rain {
+  opacity: 0.45;
+  animation: agriRainFall 1.2s linear infinite;
+}
+
+@keyframes agriRainFall {
+  0% { transform: translateY(-60px); }
+  100% { transform: translateY(60px); }
+}
+
+.agri-bgfx--cloud .agri-bgfx__cloud,
+.agri-bgfx--rain .agri-bgfx__cloud,
+.agri-bgfx--storm .agri-bgfx__cloud {
+  opacity: 1;
+}
+
+.agri-bgfx__flash {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.12);
+  opacity: 0;
+}
+
+.agri-bgfx--storm .agri-bgfx__flash {
+  animation: agriFlash 4.4s ease-in-out infinite;
+}
+
+@keyframes agriFlash {
+  0%, 88%, 100% { opacity: 0; }
+  90% { opacity: 0.22; }
+  92% { opacity: 0; }
+  95% { opacity: 0.18; }
+  97% { opacity: 0; }
+}
