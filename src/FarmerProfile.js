@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, User, MapPin, Phone, Settings } from 'lucide-react';
+import { ArrowLeft, User, MapPin, Phone, Settings, CheckCircle } from 'lucide-react';
+import { supabase } from './supabaseClient';
 import './FarmerProfile.css';
 import { FarmerProfileProvider } from './FarmerProfileContext';
 import { useFarmerProfile } from './useFarmerProfile';
@@ -13,6 +14,23 @@ const FarmerProfileInner = ({ onBack, t }) => {
       return '';
     }
   });
+
+  const [dbProfile, setDbProfile] = useState(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+        if (data) setDbProfile(data);
+      }
+    };
+    fetchProfile();
+  }, []);
 
   useEffect(() => {
     try {
@@ -28,13 +46,13 @@ const FarmerProfileInner = ({ onBack, t }) => {
 
   const { profile, actions, derived, validators } = useFarmerProfile();
 
-  const fullName = profile.personalInfo.fullName || 'Farmer';
-  const mobileNumber = profile.personalInfo.mobileNumber || '+91 XXXXX XXXXX';
+  const fullName = dbProfile?.full_name || profile.personalInfo.fullName || 'Farmer';
+  const mobileNumber = dbProfile?.phone_number || profile.personalInfo.mobileNumber || '+91 XXXXX XXXXX';
   const farmerType = profile.farmDetails.farmerType || 'Premium Farmer';
   const landSize = profile.farmDetails.landSize || 'Not Set';
-  const village = profile.location.village || '';
+  const village = dbProfile?.village || profile.location.village || '';
   const district = profile.location.district || '';
-  const state = profile.location.state || '';
+  const state = dbProfile?.state || profile.location.state || '';
   const soilType = profile.farmDetails.soilType || 'Not Set';
   const irrigation = profile.farmDetails.irrigation || 'Not Set';
 
@@ -53,10 +71,29 @@ const FarmerProfileInner = ({ onBack, t }) => {
     return String(next).trim();
   };
 
-  const onEditIdentity = () => {
+  const onEditIdentity = async () => {
     const nextName = editText('Full Name', fullName);
-    if (nextName !== null && nextName !== '') {
-      actions.patchPersonalInfo({ fullName: nextName });
+    const nextVillage = editText('Village', village);
+    const nextState = editText('State', state);
+
+    const updates = {};
+    if (nextName !== null && nextName !== '') updates.full_name = nextName;
+    if (nextVillage !== null) updates.village = nextVillage;
+    if (nextState !== null) updates.state = nextState;
+
+    if (Object.keys(updates).length > 0) {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { error } = await supabase
+        .from('user_profiles')
+        .update(updates)
+        .eq('user_id', user.id);
+
+      if (!error) {
+        setDbProfile(prev => ({ ...prev, ...updates }));
+        if (updates.full_name) actions.patchPersonalInfo({ fullName: updates.full_name });
+        if (updates.village) actions.patchLocation({ village: updates.village });
+        if (updates.state) actions.patchLocation({ state: updates.state });
+      }
     }
 
     const nextType = editText('Farmer Type', farmerType);
@@ -64,29 +101,15 @@ const FarmerProfileInner = ({ onBack, t }) => {
       actions.patchFarmDetails({ farmerType: nextType });
     }
 
-    const nextVillage = editText('Village', village);
-    if (nextVillage !== null) actions.patchLocation({ village: nextVillage });
-
     const nextDistrict = editText('District', district);
     if (nextDistrict !== null) actions.patchLocation({ district: nextDistrict });
-
-    const nextState = editText('State', state);
-    if (nextState !== null) actions.patchLocation({ state: nextState });
 
     const nextLand = editText('Land Size', landSize);
     if (nextLand !== null) actions.patchFarmDetails({ landSize: nextLand });
   };
 
   const onEditMobile = () => {
-    const raw = editText('Mobile Number (10 digits)', String(mobileNumber).replace(/\D/g, ''));
-    if (raw === null) return;
-    const digits = raw.replace(/\D/g, '').slice(0, 10);
-    const validation = validators.validateMobile(digits);
-    if (!validation.ok) {
-      window.alert(validation.message);
-      return;
-    }
-    actions.patchPersonalInfo({ mobileNumber: digits });
+    window.alert("Phone number is verified and cannot be edited manually.");
   };
 
   const onEditFarm = () => {
@@ -175,7 +198,9 @@ const FarmerProfileInner = ({ onBack, t }) => {
               <div className="fp-identity-meta">
                 <div className="fp-name-row">
                   <h2 className="fp-name" onDoubleClick={onEditIdentity}>{fullName}</h2>
-                  <span className="fp-badge">Verified</span>
+                  <span className="fp-badge" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <CheckCircle size={14} /> Verified
+                  </span>
                 </div>
                 <p className="fp-sub" onDoubleClick={onEditIdentity}>{farmerType}</p>
                 <div className="fp-kv">
@@ -212,8 +237,8 @@ const FarmerProfileInner = ({ onBack, t }) => {
                 </div>
                 <div>
                   <p className="fp-mini-label">Mobile Number</p>
-                  <p className="fp-mini-value" onDoubleClick={onEditMobile}>
-                    {profile.personalInfo.mobileNumber ? `+91 ${profile.personalInfo.mobileNumber}` : mobileNumber}
+                  <p className="fp-mini-value" style={{ cursor: 'not-allowed', color: '#9ca3af' }} onClick={onEditMobile}>
+                    {mobileNumber} <span style={{ fontSize: '10px', color: '#22c55e' }}>(Verified)</span>
                   </p>
                 </div>
               </div>

@@ -1,240 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { supabase } from './supabaseClient';
 import { 
   MessageSquare, 
   Trophy, 
   Mic, 
-  Image as ImageIcon, 
   Send, 
   Star, 
   ChevronLeft, 
-  CheckCircle2,
-  TrendingUp,
-  Award,
-  Leaf,
-  Sparkles,
-  ShieldCheck,
-  TrendingDown,
-  Info,
-  Heart,
+  Leaf, 
+  Sparkles, 
+  ShieldCheck, 
+  Heart, 
   Share2,
-  X
+  Image as ImageIcon
 } from 'lucide-react';
 import './FarmerCommunity.css';
 
-// Rich Mock Data for AI Rankings (15+ Farmers)
-const RANKINGS_DATA = {
-  today: [
-    { id: 101, name: "Anita Deshmukh", score: 985, stars: 5.0, encouragements: 42, trend: 'up', badge: "Organic Champion", crop: "Soybean" },
-    { id: 102, name: "Ramesh Pawar", score: 942, stars: 4.9, encouragements: 38, trend: 'up', badge: "Irrigation Expert", crop: "Wheat" },
-    { id: 103, name: "Suresh Patil", score: 885, stars: 4.8, encouragements: 25, trend: 'down', badge: "Village Inspiration", crop: "Tomato" },
-    { id: 104, name: "Meena Kulkarni", score: 856, stars: 4.7, encouragements: 22, trend: 'up', badge: "Consistent Farmer", crop: "Cotton" },
-    { id: 105, name: "Sunil Shinde", score: 820, stars: 4.6, encouragements: 19, trend: 'up', badge: "Top Performer", crop: "Onion" },
-    { id: 106, name: "Vikas More", score: 795, stars: 4.5, encouragements: 15, trend: 'down', badge: "", crop: "Rice" },
-    { id: 107, name: "Priya Jadhav", score: 780, stars: 4.5, encouragements: 14, trend: 'up', badge: "", crop: "Sugarcane" },
-    { id: 108, name: "Amol Gite", score: 750, stars: 4.4, encouragements: 12, trend: 'up', badge: "", crop: "Wheat" },
-    { id: 109, name: "Sanjay Raut", score: 720, stars: 4.3, encouragements: 10, trend: 'down', badge: "", crop: "Tomato" },
-    { id: 110, name: "Kavita Shah", score: 690, stars: 4.2, encouragements: 8, trend: 'up', badge: "", crop: "Soybean" },
-    { id: 111, name: "Rahul Varma", score: 650, stars: 4.0, encouragements: 7, trend: 'up', badge: "", crop: "Onion" },
-    { id: 112, name: "Deepak Kale", score: 620, stars: 3.9, encouragements: 6, trend: 'down', badge: "", crop: "Rice" },
-    { id: 113, name: "Jyoti Patil", score: 580, stars: 3.8, encouragements: 5, trend: 'up', badge: "", crop: "Cotton" },
-    { id: 114, name: "Nitin Desai", score: 540, stars: 3.7, encouragements: 4, trend: 'up', badge: "", crop: "Sugarcane" },
-    { id: 115, name: "Seema Rao", score: 510, stars: 3.5, encouragements: 3, trend: 'down', badge: "", crop: "Wheat" }
-  ],
-  week: [
-    { id: 101, name: "Anita Deshmukh", score: 4850, stars: 5.0, encouragements: 210, trend: 'up', badge: "Organic Champion", crop: "Soybean" },
-    { id: 104, name: "Meena Kulkarni", score: 4520, stars: 4.9, encouragements: 195, trend: 'up', badge: "Seed Expert", crop: "Cotton" },
-    { id: 102, name: "Ramesh Pawar", score: 4300, stars: 4.9, encouragements: 180, trend: 'up', badge: "Irrigation Expert", crop: "Wheat" },
-    { id: 105, name: "Sunil Shinde", score: 3900, stars: 4.7, encouragements: 150, trend: 'down', badge: "Community Leader", crop: "Onion" },
-    { id: 103, name: "Suresh Patil", score: 3750, stars: 4.6, encouragements: 140, trend: 'up', badge: "Village Inspiration", crop: "Tomato" },
-    { id: 106, name: "Vikas More", score: 3500, stars: 4.5, encouragements: 120, trend: 'up', badge: "", crop: "Rice" },
-    { id: 107, name: "Priya Jadhav", score: 3400, stars: 4.4, encouragements: 110, trend: 'down', badge: "", crop: "Sugarcane" },
-    { id: 110, name: "Kavita Shah", score: 3200, stars: 4.3, encouragements: 100, trend: 'up', badge: "", crop: "Soybean" },
-  ],
-  month: [
-    { id: 105, name: "Sunil Shinde", score: 18500, stars: 5.0, encouragements: 840, trend: 'up', badge: "Community Leader", crop: "Onion" },
-    { id: 101, name: "Anita Deshmukh", score: 17200, stars: 4.9, encouragements: 790, trend: 'up', badge: "Organic Champion", crop: "Soybean" },
-    { id: 102, name: "Ramesh Pawar", score: 16800, stars: 4.9, encouragements: 750, trend: 'up', badge: "Irrigation Expert", crop: "Wheat" },
-  ]
-};
-
-const INITIAL_POSTS = [
-  {
-    id: 1,
-    name: "Ramesh Pawar",
-    location: "Amman, Pune",
-    activity: "Irrigation",
-    crop: "Wheat",
-    text: "Started early morning drip irrigation for the wheat crop. Soil moisture levels are looking optimal. The system is working efficiently.",
-    timestamp: "2 hours ago",
-    stars: 4.9,
-    encouragements: 45,
-    verifiedCount: 12,
-    hasVoice: true,
-    images: ["/images/1.jpg"], // Using image from public folder
-    qualityBadge: "Water Efficient",
-    isPremium: true,
-    likes: 45,
-    comments: 12,
-    shares: 5,
-    liked: false
-  },
-  {
-    id: 2,
-    name: "Anita Deshmukh",
-    location: "Amman, Pune",
-    activity: "Sowing",
-    crop: "Soybean",
-    text: "Completed soybean sowing today using organic seed treatment. The soil preparation was done over 3 days for maximum aeration.",
-    timestamp: "5 hours ago",
-    stars: 5.0,
-    encouragements: 82,
-    verifiedCount: 24,
-    hasVoice: false,
-    images: ["/images/2.avif"], // 2. Farmer in field
-    qualityBadge: "Sustainable Choice",
-    isPremium: true,
-    likes: 45,
-    comments: 12,
-    shares: 5,
-    liked: false
-  },
-  {
-    id: 3,
-    name: "Suresh Patil",
-    location: "Amman, Pune",
-    activity: "Fertilizer",
-    crop: "Tomato",
-    text: "Applied secondary dose of organic fertilizer. Tomatoes are showing great color and size. Monitoring for any early signs of blight.",
-    timestamp: "8 hours ago",
-    stars: 4.8,
-    encouragements: 34,
-    verifiedCount: 9,
-    hasVoice: true,
-    images: ["/images/3.jpg"], // 3. Farmer carrying sugarcane
-    qualityBadge: "Healthy Growth",
-    isPremium: false
-  },
-  {
-    id: 4,
-    name: "Sunil Shinde",
-    location: "Amman, Pune",
-    activity: "Pest Control",
-    crop: "Onion",
-    text: "Natural neem oil spray application today. Seeing good results against thrips without using harsh chemicals. Maintaining the village's organic standards.",
-    timestamp: "12 hours ago",
-    stars: 4.7,
-    encouragements: 29,
-    verifiedCount: 7,
-    hasVoice: false,
-    images: ["/images/4.jpg"], // 4. Hand holding onions
-    qualityBadge: "Eco Friendly",
-    isPremium: false
-  },
-  {
-    id: 5,
-    name: "Meena Kulkarni",
-    location: "Amman, Pune",
-    activity: "Growth Update",
-    crop: "Cotton",
-    text: "Cotton plants are now 3 feet tall! The flowering stage has begun. Everything is on schedule for a mid-season harvest.",
-    timestamp: "Yesterday",
-    stars: 4.9,
-    encouragements: 56,
-    verifiedCount: 15,
-    hasVoice: true,
-    images: ["/images/5.jpg"], // 5. Farmer with cotton
-    qualityBadge: "High Productivity",
-    isPremium: true,
-    likes: 45,
-    comments: 12,
-    shares: 5,
-    liked: false
-  },
-  {
-    id: 6,
-    name: "Vikas More",
-    location: "Amman, Pune",
-    activity: "Harvest Prep",
-    crop: "Rice",
-    text: "Preparing the threshing floor for next week's rice harvest. The grains are hardening perfectly. Looking forward to a bumper crop!",
-    timestamp: "Yesterday",
-    stars: 4.6,
-    encouragements: 41,
-    verifiedCount: 11,
-    hasVoice: false,
-    images: ["/images/6.webp"], // 6. Lush rice paddy
-    qualityBadge: "Quality Grains",
-    isPremium: false
-  },
-  {
-    id: 7,
-    name: "Priya Jadhav",
-    location: "Amman, Pune",
-    activity: "Irrigation",
-    crop: "Sugarcane",
-    text: "Secondary canal water reached our fields today. Sugarcane height is already 6 feet. Consistency in watering is key this month.",
-    timestamp: "2 days ago",
-    stars: 4.7,
-    encouragements: 38,
-    verifiedCount: 10,
-    hasVoice: true,
-    images: ["/images/7.jpg"], // 7. Sugarcane harvest carry
-    qualityBadge: "Resource Management",
-    isPremium: false
-  },
-  {
-    id: 8,
-    name: "Amol Gite",
-    location: "Amman, Pune",
-    activity: "Sowing",
-    crop: "Wheat",
-    text: "Starting the second phase of wheat sowing. Using the new seed drill for uniform spacing. This should improve yield by 15%.",
-    timestamp: "2 days ago",
-    stars: 4.5,
-    encouragements: 27,
-    verifiedCount: 6,
-    hasVoice: false,
-    images: ["/images/8.jpg"], // 8. Wide wheat field
-    qualityBadge: "Precision Sowing",
-    isPremium: false
-  },
-  {
-    id: 9,
-    name: "Sanjay Raut",
-    location: "Amman, Pune",
-    activity: "Fertilizer",
-    crop: "Tomato",
-    text: "Organic compost mix applied. We've seen a 20% increase in fruit count compared to last year. Community-sourced manure works wonders.",
-    timestamp: "3 days ago",
-    stars: 4.6,
-    encouragements: 31,
-    verifiedCount: 8,
-    hasVoice: true,
-    images: ["/images/9.webp"], // 9. Tomatoes in crate
-    qualityBadge: "Community Practice",
-    isPremium: false
-  },
-  {
-    id: 10,
-    name: "Kavita Shah",
-    location: "Amman, Pune",
-    activity: "Pest Control",
-    crop: "Soybean",
-    text: "Installing pheromone traps today. A simple but effective way to monitor pest levels without immediate chemical use.",
-    timestamp: "3 days ago",
-    stars: 4.8,
-    encouragements: 44,
-    verifiedCount: 13,
-    hasVoice: false,
-    images: ["/images/10.jpg"], // 10. Soybean field rows
-    qualityBadge: "Smart Farming",
-    isPremium: true,
-    likes: 45,
-    comments: 12,
-    shares: 5,
-    liked: false
-  }
-];
 const ENCOURAGE_OPTIONS = [
   { id: 'practice', label: 'Good Farming Practice', emoji: '🌱', weight: 1.5 },
   { id: 'irrigation', label: 'Proper Irrigation', emoji: '💧', weight: 1.2 },
@@ -242,20 +23,375 @@ const ENCOURAGE_OPTIONS = [
   { id: 'consistent', label: 'Consistent Farmer', emoji: '🏆', weight: 2.0 }
 ];
 
+const RANKINGS_DATA = {
+  today: [
+    { id: 101, name: "Anita Deshmukh", score: 985, stars: 5.0, encouragements: 45, trend: 'up', badge: "Organic Champion", crop: "Soybean" },
+    { id: 102, name: "Ramesh Pawar", score: 942, stars: 4.9, encouragements: 38, trend: 'up', badge: "Irrigation Expert", crop: "Wheat" },
+    { id: 103, name: "Suresh Patil", score: 885, stars: 4.8, encouragements: 25, trend: 'down', badge: "Village Inspiration", crop: "Tomato" },
+    { id: 104, name: "Sunil Shinde", score: 850, stars: 4.7, encouragements: 22, trend: 'up', badge: "Pest Expert", crop: "Onion" },
+    { id: 105, name: "Meena Kulkarni", score: 820, stars: 4.6, encouragements: 20, trend: 'up', badge: "Growth Guru", crop: "Cotton" },
+    { id: 106, name: "Vikas More", score: 790, stars: 4.5, encouragements: 18, trend: 'down', badge: "Rice Master", crop: "Rice" },
+    { id: 107, name: "Priya Jadhav", score: 765, stars: 4.4, encouragements: 15, trend: 'up', badge: "Water Wise", crop: "Sugarcane" },
+    { id: 108, name: "Amol Gite", score: 740, stars: 4.3, encouragements: 12, trend: 'up', badge: "Newcomer", crop: "Wheat" },
+    { id: 109, name: "Sanjay Raut", score: 715, stars: 4.2, encouragements: 10, trend: 'down', badge: "Hardworker", crop: "Tomato" },
+    { id: 110, name: "Kavita Shah", score: 690, stars: 4.1, encouragements: 8, trend: 'up', badge: "Monitoring Ace", crop: "Soybean" }
+  ],
+  week: [
+    { id: 101, name: "Anita Deshmukh", score: 4850, stars: 5.0, encouragements: 210, trend: 'up', badge: "Organic Champion", crop: "Soybean" },
+    { id: 102, name: "Ramesh Pawar", score: 4620, stars: 4.9, encouragements: 195, trend: 'up', badge: "Irrigation Expert", crop: "Wheat" },
+    { id: 105, name: "Meena Kulkarni", score: 4400, stars: 4.8, encouragements: 180, trend: 'up', badge: "Growth Guru", crop: "Cotton" },
+    { id: 103, name: "Suresh Patil", score: 4250, stars: 4.7, encouragements: 165, trend: 'down', badge: "Village Inspiration", crop: "Tomato" },
+    { id: 104, name: "Sunil Shinde", score: 4100, stars: 4.7, encouragements: 150, trend: 'up', badge: "Pest Expert", crop: "Onion" },
+    { id: 110, name: "Kavita Shah", score: 3950, stars: 4.6, encouragements: 140, trend: 'up', badge: "Monitoring Ace", crop: "Soybean" },
+    { id: 106, name: "Vikas More", score: 3800, stars: 4.5, encouragements: 130, trend: 'down', badge: "Rice Master", crop: "Rice" },
+    { id: 107, name: "Priya Jadhav", score: 3650, stars: 4.4, encouragements: 120, trend: 'up', badge: "Water Wise", crop: "Sugarcane" },
+    { id: 108, name: "Amol Gite", score: 3500, stars: 4.3, encouragements: 110, trend: 'up', badge: "Newcomer", crop: "Wheat" },
+    { id: 109, name: "Sanjay Raut", score: 3350, stars: 4.2, encouragements: 100, trend: 'down', badge: "Hardworker", crop: "Tomato" }
+  ],
+  month: [
+    { id: 105, name: "Meena Kulkarni", score: 19200, stars: 5.0, encouragements: 920, trend: 'up', badge: "Growth Guru", crop: "Cotton" },
+    { id: 101, name: "Anita Deshmukh", score: 18500, stars: 5.0, encouragements: 840, trend: 'up', badge: "Organic Champion", crop: "Soybean" },
+    { id: 104, name: "Sunil Shinde", score: 17800, stars: 4.9, encouragements: 790, trend: 'up', badge: "Pest Expert", crop: "Onion" },
+    { id: 102, name: "Ramesh Pawar", score: 17100, stars: 4.9, encouragements: 750, trend: 'up', badge: "Irrigation Expert", crop: "Wheat" },
+    { id: 110, name: "Kavita Shah", score: 16400, stars: 4.8, encouragements: 710, trend: 'up', badge: "Monitoring Ace", crop: "Soybean" },
+    { id: 103, name: "Suresh Patil", score: 15700, stars: 4.7, encouragements: 680, trend: 'down', badge: "Village Inspiration", crop: "Tomato" },
+    { id: 106, name: "Vikas More", score: 15000, stars: 4.6, encouragements: 650, trend: 'down', badge: "Rice Master", crop: "Rice" },
+    { id: 107, name: "Priya Jadhav", score: 14300, stars: 4.5, encouragements: 620, trend: 'up', badge: "Water Wise", crop: "Sugarcane" },
+    { id: 108, name: "Amol Gite", score: 13600, stars: 4.4, encouragements: 590, trend: 'up', badge: "Newcomer", crop: "Wheat" },
+    { id: 109, name: "Sanjay Raut", score: 12900, stars: 4.3, encouragements: 560, trend: 'down', badge: "Hardworker", crop: "Tomato" }
+  ]
+};
+
+const INITIAL_MOCK_POSTS = [
+  {
+    id: 'mock-1',
+    name: "Ramesh Pawar",
+    location: "Amman, Pune",
+    activity: "Irrigation",
+    crop: "Wheat",
+    text: "Started early morning drip irrigation for the wheat crop. Soil moisture levels are looking optimal.",
+    timestamp: "2 hours ago",
+    images: ["/images/1.jpg"],
+    likes: 45,
+    comments: 12,
+    shares: 5,
+    liked: false,
+    isPremium: true
+  },
+  {
+    id: 'mock-2',
+    name: "Anita Deshmukh",
+    location: "Amman, Pune",
+    activity: "Sowing",
+    crop: "Soybean",
+    text: "Completed soybean sowing today using organic seed treatment. Soil preparation was excellent.",
+    timestamp: "5 hours ago",
+    images: ["/images/2.avif"],
+    likes: 82,
+    comments: 24,
+    shares: 8,
+    liked: false,
+    isPremium: true
+  },
+  {
+    id: 'mock-3',
+    name: "Suresh Patil",
+    location: "Amman, Pune",
+    activity: "Fertilizer",
+    crop: "Tomato",
+    text: "Applied secondary dose of organic fertilizer. Tomatoes are showing great color.",
+    timestamp: "8 hours ago",
+    images: ["/images/3.jpg"],
+    likes: 34,
+    comments: 9,
+    shares: 2,
+    liked: false,
+    isPremium: false
+  },
+  {
+    id: 'mock-4',
+    name: "Sunil Shinde",
+    location: "Amman, Pune",
+    activity: "Pest Control",
+    crop: "Onion",
+    text: "Natural neem oil spray application today. Seeing good results against thrips.",
+    timestamp: "12 hours ago",
+    images: ["/images/4.jpg"],
+    likes: 29,
+    comments: 7,
+    shares: 3,
+    liked: false,
+    isPremium: false
+  },
+  {
+    id: 'mock-5',
+    name: "Meena Kulkarni",
+    location: "Amman, Pune",
+    activity: "Growth Update",
+    crop: "Cotton",
+    text: "Cotton plants are now 3 feet tall! Flowering stage has begun.",
+    timestamp: "Yesterday",
+    images: ["/images/5.jpg"],
+    likes: 56,
+    comments: 15,
+    shares: 6,
+    liked: false,
+    isPremium: true
+  },
+  {
+    id: 'mock-6',
+    name: "Vikas More",
+    location: "Amman, Pune",
+    activity: "Harvest Prep",
+    crop: "Rice",
+    text: "Preparing the threshing floor for next week's rice harvest. Grains are hardening perfectly.",
+    timestamp: "Yesterday",
+    images: ["/images/6.webp"],
+    likes: 41,
+    comments: 11,
+    shares: 4,
+    liked: false,
+    isPremium: false
+  },
+  {
+    id: 'mock-7',
+    name: "Priya Jadhav",
+    location: "Amman, Pune",
+    activity: "Irrigation",
+    crop: "Sugarcane",
+    text: "Secondary canal water reached our fields today. Sugarcane height is already 6 feet.",
+    timestamp: "2 days ago",
+    images: ["/images/7.jpg"],
+    likes: 38,
+    comments: 10,
+    shares: 3,
+    liked: false,
+    isPremium: false
+  },
+  {
+    id: 'mock-8',
+    name: "Amol Gite",
+    location: "Amman, Pune",
+    activity: "Sowing",
+    crop: "Wheat",
+    text: "Starting second phase of wheat sowing. Using new seed drill for uniform spacing.",
+    timestamp: "2 days ago",
+    images: ["/images/8.jpg"],
+    likes: 27,
+    comments: 6,
+    shares: 1,
+    liked: false,
+    isPremium: false
+  },
+  {
+    id: 'mock-9',
+    name: "Sanjay Raut",
+    location: "Amman, Pune",
+    activity: "Fertilizer",
+    crop: "Tomato",
+    text: "Organic compost mix applied. Seeing 20% increase in fruit count.",
+    timestamp: "3 days ago",
+    images: ["/images/9.webp"],
+    likes: 31,
+    comments: 8,
+    shares: 2,
+    liked: false,
+    isPremium: false
+  },
+  {
+    id: 'mock-10',
+    name: "Kavita Shah",
+    location: "Amman, Pune",
+    activity: "Pest Control",
+    crop: "Soybean",
+    text: "Installing pheromone traps today. Effective way to monitor pest levels.",
+    timestamp: "3 days ago",
+    images: ["/images/10.jpg"],
+    likes: 44,
+    comments: 13,
+    shares: 5,
+    liked: false,
+    isPremium: true
+  }
+];
+
 const FarmerCommunity = ({ onBack, farmerName }) => {
   const [activeTab, setActiveTab] = useState('feed'); 
-  const [posts, setPosts] = useState(INITIAL_POSTS);
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [newPostText, setNewPostText] = useState('');
   const [isRecording, setIsRecording] = useState(false);
-  const [selectedImages, setSelectedImages] = useState([]);
   const [showEncourageSheet, setShowEncourageSheet] = useState(false);
   const [activePostId, setActivePostId] = useState(null);
-  const [rankFilter, setRankFilter] = useState('today'); 
+  const [rankFilter, setRankFilter] = useState('today');
   const [encouragedPosts, setEncouragedPosts] = useState(new Set());
-  const [showShareModal, setShowShareModal] = useState(false);
   const [activeCommentPostId, setActiveCommentPostId] = useState(null);
   const [commentText, setCommentText] = useState('');
-  
+
+  const fetchPosts = async () => {
+    try {
+      setLoading(true);
+      const { data: postsData, error: postsError } = await supabase
+        .from('posts')
+        .select(`
+          *,
+          user_profiles!inner (full_name, village),
+          likes (user_id),
+          comments (id, comment_text, user_id, created_at),
+          shares (user_id)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (postsError) throw postsError;
+
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const formattedPosts = postsData.map(post => ({
+        id: post.id,
+        name: post.user_profiles?.full_name || 'Unknown Farmer',
+        location: post.user_profiles?.village || 'Unknown',
+        activity: 'Update', 
+        crop: 'General', 
+        text: post.content,
+        timestamp: new Date(post.created_at).toLocaleString(),
+        images: post.image_url ? [post.image_url] : [],
+        likes: post.likes?.length || 0,
+        comments: post.comments?.length || 0,
+        shares: post.shares?.length || 0,
+        liked: post.likes?.some(l => l.user_id === user?.id),
+        user_id: post.user_id,
+        isPremium: true
+      }));
+
+      // Merge with mock posts to ensure there are always 10+ posts
+      setPosts([...formattedPosts, ...INITIAL_MOCK_POSTS]);
+    } catch (err) {
+      console.warn('Supabase fetch failed, showing mock posts only:', err.message);
+      setPosts(INITIAL_MOCK_POSTS);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPosts();
+    
+    const channel = supabase
+      .channel('public:posts_realtime')
+      .on('postgres_changes', { event: '*', table: 'posts' }, fetchPosts)
+      .on('postgres_changes', { event: '*', table: 'likes' }, fetchPosts)
+      .on('postgres_changes', { event: '*', table: 'comments' }, fetchPosts)
+      .on('postgres_changes', { event: '*', table: 'shares' }, fetchPosts)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const handlePostSubmit = async (e) => {
+    if (e) e.preventDefault();
+    if (!newPostText.trim()) return;
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase.from('posts').insert([{
+        user_id: user.id,
+        content: newPostText,
+        image_url: null 
+      }]);
+
+      if (error) throw error;
+      setNewPostText('');
+      setIsRecording(false);
+    } catch (err) {
+      alert("Error posting: " + err.message);
+    }
+  };
+
+  const handleLike = async (postId) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        alert("Please login to like posts");
+        return;
+      }
+
+      const post = posts.find(p => p.id === postId);
+      if (!post) return;
+
+      // Optimistic Update
+      const isMockPost = postId.toString().startsWith('mock-');
+      setPosts(prevPosts => prevPosts.map(p => {
+        if (p.id === postId) {
+          const newLiked = !p.liked;
+          return {
+            ...p,
+            liked: newLiked,
+            likes: newLiked ? (p.likes + 1) : Math.max(0, p.likes - 1)
+          };
+        }
+        return p;
+      }));
+
+      if (isMockPost) return;
+
+      if (post.liked) {
+        await supabase.from('likes').delete().eq('post_id', postId).eq('user_id', user.id);
+      } else {
+        await supabase.from('likes').insert([{ post_id: postId, user_id: user.id }]);
+      }
+    } catch (err) {
+      console.error('Error liking post:', err);
+      // Revert on error could be added here
+    }
+  };
+
+  const handleCommentSubmit = async (postId) => {
+    if (!commentText.trim()) return;
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase.from('comments').insert([{
+        post_id: postId,
+        user_id: user.id,
+        comment_text: commentText
+      }]);
+
+      if (error) throw error;
+      setCommentText('');
+      setActiveCommentPostId(null);
+    } catch (err) {
+      alert("Error commenting: " + err.message);
+    }
+  };
+
+  const handleShare = async (postId) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      await supabase.from('shares').insert([{ post_id: postId, user_id: user.id }]);
+      alert("Shared successfully!");
+    } catch (err) {
+      console.error('Error sharing:', err);
+    }
+  };
+
+  const calculateImpactScore = (post) => {
+    const score = ((post.likes || 0) * 2) + ((post.comments || 0) * 3) + ((post.shares || 0) * 4);
+    return Math.floor(score + 450);
+  };
+
+  const submitEncourage = (option) => {
+    setEncouragedPosts(new Set([...encouragedPosts, activePostId]));
+    setShowEncourageSheet(false);
+  };
+
   const recognitionRef = useRef(null);
 
   useEffect(() => {
@@ -286,103 +422,6 @@ const FarmerCommunity = ({ onBack, farmerName }) => {
     }
   };
 
-  const handlePostSubmit = (e) => {
-    e.preventDefault();
-    if (!newPostText.trim() && selectedImages.length === 0 && !isRecording) return;
-
-    const newPost = {
-      id: Date.now(),
-      name: farmerName || "Suresh Patil",
-      location: "Amman, Pune",
-      activity: "Update",
-      crop: "Mixed",
-      text: newPostText,
-      timestamp: "Just now",
-      stars: 4.5,
-      encouragements: 0,
-      verifiedCount: 0,
-      hasVoice: isRecording,
-      images: selectedImages.length > 0 ? ["https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?q=80&w=800"] : [],
-      qualityBadge: "New Update",
-      isPremium: true
-    };
-
-    setPosts([newPost, ...posts]);
-    setNewPostText('');
-    setSelectedImages([]);
-    setIsRecording(false);
-  };
-
-  const handleLike = (postId) => {
-    setPosts(posts.map(post => {
-      if (post.id === postId) {
-        return {
-          ...post,
-          likes: post.liked ? post.likes - 1 : post.likes + 1,
-          liked: !post.liked
-        };
-      }
-      return post;
-    }));
-  };
-
-  const handleShare = (postId) => {
-    setPosts(posts.map(post => {
-      if (post.id === postId) {
-        return {
-          ...post,
-          shares: (post.shares || 0) + 1
-        };
-      }
-      return post;
-    }));
-    setShowShareModal(true);
-  };
-
-  const handleCommentSubmit = (postId) => {
-    if (!commentText.trim()) return;
-    setPosts(posts.map(post => {
-      if (post.id === postId) {
-        return {
-          ...post,
-          comments: (post.comments || 0) + 1
-        };
-      }
-      return post;
-    }));
-    setCommentText('');
-    setActiveCommentPostId(null);
-  };
-
-  const calculateImpactScore = (post) => {
-    const score = ((post.likes || 0) * 2) + ((post.comments || 0) * 3) + ((post.shares || 0) * 4);
-    return Math.floor(score + 450);
-  };
-
-  const handleEncourageClick = (postId) => {
-    if (encouragedPosts.has(postId)) return;
-    setActivePostId(postId);
-    setShowEncourageSheet(true);
-  };
-
-  const submitEncourage = (option) => {
-    const updatedPosts = posts.map(post => {
-      if (post.id === activePostId) {
-        const weight = option.weight;
-        return {
-          ...post,
-          encouragements: post.encouragements + 1,
-          stars: Math.min(5, post.stars + (weight * 0.01))
-        };
-      }
-      return post;
-    });
-
-    setPosts(updatedPosts);
-    setEncouragedPosts(new Set([...encouragedPosts, activePostId]));
-    setShowEncourageSheet(false);
-  };
-
   return (
     <div className="community-wrapper">
       <header className="community-header">
@@ -405,17 +444,11 @@ const FarmerCommunity = ({ onBack, farmerName }) => {
         </div>
         
         <div className="header-tabs">
-          <button 
-            className={`tab-btn ${activeTab === 'feed' ? 'active' : ''}`}
-            onClick={() => setActiveTab('feed')}
-          >
+          <button className={`tab-btn ${activeTab === 'feed' ? 'active' : ''}`} onClick={() => setActiveTab('feed')}>
             <MessageSquare size={18} />
             <span>Updates Feed</span>
           </button>
-          <button 
-            className={`tab-btn ${activeTab === 'rankings' ? 'active' : ''}`}
-            onClick={() => setActiveTab('rankings')}
-          >
+          <button className={`tab-btn ${activeTab === 'rankings' ? 'active' : ''}`} onClick={() => setActiveTab('rankings')}>
             <Trophy size={18} />
             <span>AI Rankings</span>
           </button>
@@ -425,7 +458,6 @@ const FarmerCommunity = ({ onBack, farmerName }) => {
       <main className="community-main">
         {activeTab === 'feed' ? (
           <div className="feed-container">
-            {/* Post Input */}
             <div className="create-post glass-card">
               <div className="user-avatar-small">
                 {(farmerName?.[0] || 'S').toUpperCase()}
@@ -439,22 +471,14 @@ const FarmerCommunity = ({ onBack, farmerName }) => {
                 <div className="post-divider"></div>
                 <div className="post-actions">
                   <div className="input-options">
-                    <button 
-                      type="button" 
-                      className={`icon-btn ${isRecording ? 'active' : ''}`}
-                      onClick={handleToggleVoice}
-                    >
+                    <button type="button" className={`icon-btn ${isRecording ? 'active' : ''}`} onClick={handleToggleVoice}>
                       <Mic size={18} />
                     </button>
-                    <button 
-                      type="button" 
-                      className="icon-btn"
-                      onClick={() => setSelectedImages(['mock'])}
-                    >
+                    <button type="button" className="icon-btn">
                       <ImageIcon size={18} />
                     </button>
                   </div>
-                  <button type="submit" className="submit-btn-premium" disabled={!newPostText.trim() && !isRecording}>
+                  <button type="submit" className="submit-btn-premium" disabled={!newPostText.trim()}>
                     <Send size={16} />
                     <span>Post Update</span>
                   </button>
@@ -462,15 +486,14 @@ const FarmerCommunity = ({ onBack, farmerName }) => {
               </form>
             </div>
 
-            {/* Posts List */}
             <div className="posts-list">
-              {posts.map((post) => (
+              {loading ? (
+                <div className="loading-state">Loading posts...</div>
+              ) : posts.map((post) => (
                 <div key={post.id} className="post-card-premium glass-card-premium scroll-reveal">
                   <div className="post-header-premium">
                     <div className="farmer-meta">
-                      <div className="avatar-circle-premium">
-                        {post.name[0]}
-                      </div>
+                      <div className="avatar-circle-premium">{post.name[0]}</div>
                       <div className="meta-text-premium">
                         <h3>{post.name} {post.isPremium && <ShieldCheck size={14} className="verified-icon" />}</h3>
                         <p className="location-time-premium">{post.location} • {post.timestamp}</p>
@@ -481,10 +504,7 @@ const FarmerCommunity = ({ onBack, farmerName }) => {
                   
                   <div className="post-content-premium">
                     <div className="post-divider-thin"></div>
-                    <div className="crop-tag-premium">
-                      <Leaf size={12} />
-                      <span>{post.crop}</span>
-                    </div>
+                    <div className="crop-tag-premium"><Leaf size={12} /><span>{post.crop}</span></div>
                     {post.text && <p className="post-text-premium">{post.text}</p>}
                     
                     {post.images.length > 0 && (
@@ -497,72 +517,63 @@ const FarmerCommunity = ({ onBack, farmerName }) => {
                       </div>
                     )}
 
-                    {/* Modern Social Interaction Bar */}
                     <div className="social-interaction-bar-premium">
                       <div className="interaction-left">
-                        <button 
-                          className={`interaction-btn-premium like ${post.liked ? 'active' : ''}`}
-                          onClick={() => handleLike(post.id)}
-                        >
+                        <button className={`interaction-btn-premium like ${post.liked ? 'active' : ''}`} onClick={() => handleLike(post.id)}>
                           <Heart size={18} fill={post.liked ? "#ff4b4b" : "transparent"} stroke={post.liked ? "#ff4b4b" : "currentColor"} />
                           <span className="interaction-count">{post.likes}</span>
                         </button>
                         
-                        <button 
-                          className={`interaction-btn-premium comment ${activeCommentPostId === post.id ? 'active' : ''}`}
-                          onClick={() => setActiveCommentPostId(activeCommentPostId === post.id ? null : post.id)}
-                        >
+                        <button className={`interaction-btn-premium comment ${activeCommentPostId === post.id ? 'active' : ''}`} onClick={() => setActiveCommentPostId(activeCommentPostId === post.id ? null : post.id)}>
                           <MessageSquare size={18} />
                           <span className="interaction-count">{post.comments}</span>
                         </button>
 
                         <button 
-                          className="interaction-btn-premium share"
+                          className={`interaction-btn-premium share`} 
                           onClick={() => handleShare(post.id)}
                         >
                           <Share2 size={18} />
-                          <span className="interaction-count">{post.shares}</span>
                         </button>
+                        <div className="social-controls-premium-secondary">
+                          <button 
+                            className={`encourage-pill-premium ${encouragedPosts.has(post.id) ? 'active' : ''}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!encouragedPosts.has(post.id)) {
+                                setActivePostId(post.id);
+                                setShowEncourageSheet(true);
+                              }
+                            }}
+                          >
+                            {encouragedPosts.has(post.id) ? (
+                              <span>Awarded</span>
+                            ) : (
+                              <span>Encourage</span>
+                            )}
+                          </button>
+                        </div>
                       </div>
 
                       <div className="interaction-right">
-                        <div className="ai-impact-badge-v2" title="Calculated based on real community engagement and farming impact.">
+                        <div className="ai-impact-badge-v2">
                           <Sparkles size={12} className="sparkle-icon" />
                           <span>Impact: {calculateImpactScore(post)}</span>
-                          <div className="impact-glow-v2"></div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="social-controls-premium-secondary">
-                      <button 
-                        className={`encourage-pill-premium ${encouragedPosts.has(post.id) ? 'active' : ''}`}
-                        onClick={() => handleEncourageClick(post.id)}
-                      >
-                        {encouragedPosts.has(post.id) ? (
-                          <><CheckCircle2 size={16} /><span>Awarded</span></>
-                        ) : (
-                          <><Award size={16} /><span>Encourage</span></>
-                        )}
-                      </button>
-                    </div>
-
-                    {/* Sliding Comment Input */}
                     {activeCommentPostId === post.id && (
                       <div className="comment-input-area-premium">
                         <input 
                           type="text" 
-                          placeholder="Write a thoughtful comment..." 
+                          placeholder="Write a comment..." 
                           value={commentText}
                           onChange={(e) => setCommentText(e.target.value)}
                           onKeyPress={(e) => e.key === 'Enter' && handleCommentSubmit(post.id)}
                           autoFocus
                         />
-                        <button 
-                          className="send-comment-btn" 
-                          disabled={!commentText.trim()}
-                          onClick={() => handleCommentSubmit(post.id)}
-                        >
+                        <button className="send-comment-btn" disabled={!commentText.trim()} onClick={() => handleCommentSubmit(post.id)}>
                           <Send size={16} />
                         </button>
                       </div>
@@ -574,19 +585,14 @@ const FarmerCommunity = ({ onBack, farmerName }) => {
           </div>
         ) : (
           <div className="rankings-container">
-            {/* Rankings Header */}
             <div className="rankings-hero glass-card-premium">
               <div className="hero-badge">AI Verified Excellence</div>
               <h2>Community Leaders</h2>
-              <p>Top performing farmers based on impact, sustainability & engagement</p>
+              <p>Top performing farmers based on impact & sustainability</p>
             </div>
             <div className="ranking-filters">
               {['today', 'week', 'month'].map(filter => (
-                <button 
-                  key={filter}
-                  className={`filter-chip ${rankFilter === filter ? 'active' : ''}`}
-                  onClick={() => setRankFilter(filter)}
-                >
+                <button key={filter} className={`filter-chip ${rankFilter === filter ? 'active' : ''}`} onClick={() => setRankFilter(filter)}>
                   {filter.charAt(0).toUpperCase() + filter.slice(1)}
                 </button>
               ))}
@@ -595,21 +601,15 @@ const FarmerCommunity = ({ onBack, farmerName }) => {
             <div className="leaderboard-list">
               {(RANKINGS_DATA[rankFilter] || []).map((farmer, index) => (
                 <div key={farmer.id} className={`leader-card-premium glass-card ${index < 3 ? 'top-rank-card' : ''}`}>
-                  <div className={`rank-display rank-${index + 1}`}>
-                    {index + 1}
-                  </div>
+                  <div className={`rank-display rank-${index + 1}`}>{index + 1}</div>
                   <div className="leader-info">
                     <div className="leader-name">
                       {farmer.name}
-                      {farmer.badge && <span className="activity-badge text-[10px] py-0.5 px-1.5">{farmer.badge}</span>}
+                      {farmer.badge && <span className="activity-badge">{farmer.badge}</span>}
                     </div>
                     <div className="leader-stats">
                       <span className="flex items-center gap-1"><Star size={12} fill="#22c55e" className="text-green-500" /> {farmer.stars}</span>
                       <span>• Crop: {farmer.crop}</span>
-                      <span>• {farmer.encouragements} Encouragements</span>
-                      <span className={`trend-indicator ${farmer.trend === 'up' ? 'trend-up' : 'trend-down'}`}>
-                        {farmer.trend === 'up' ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-                      </span>
                     </div>
                   </div>
                   <div className="score-badge-premium">
@@ -619,60 +619,22 @@ const FarmerCommunity = ({ onBack, farmerName }) => {
                 </div>
               ))}
             </div>
-
-            <div className="ai-disclaimer">
-              <Info size={14} />
-              <span>Ranking is AI-generated based on daily activity & community feedback.</span>
-            </div>
           </div>
         )}
       </main>
 
-      {/* Encourage Bottom Sheet */}
       {showEncourageSheet && (
         <div className="bottom-sheet-overlay" onClick={() => setShowEncourageSheet(false)}>
           <div className="bottom-sheet" onClick={e => e.stopPropagation()}>
             <div className="sheet-handle"></div>
             <h2 className="sheet-title">Encourage Farmer</h2>
-            <p className="sheet-subtitle">Select why this update is helpful for the village</p>
-            
             <div className="encourage-options">
               {ENCOURAGE_OPTIONS.map(option => (
-                <div 
-                  key={option.id} 
-                  className="option-card"
-                  onClick={() => submitEncourage(option)}
-                >
+                <div key={option.id} className="option-card" onClick={() => submitEncourage(option)}>
                   <span className="option-emoji">{option.emoji}</span>
                   <span className="option-label">{option.label}</span>
                 </div>
               ))}
-            </div>
-          </div>
-        </div>
-      )}
-      {/* Share Modal */}
-      {showShareModal && (
-        <div className="modal-overlay-premium" onClick={() => setShowShareModal(false)}>
-          <div className="share-modal glass-card-premium" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Share Post</h3>
-              <button className="close-modal" onClick={() => setShowShareModal(false)}>
-                <X size={20} />
-              </button>
-            </div>
-            <div className="share-options-grid">
-              <button className="share-option-btn" onClick={() => {
-                navigator.clipboard.writeText(window.location.href);
-                setShowShareModal(false);
-              }}>
-                <div className="share-icon-circle"><Share2 size={20} /></div>
-                <span>Copy Link</span>
-              </button>
-              <button className="share-option-btn">
-                <div className="share-icon-circle"><MessageSquare size={20} /></div>
-                <span>Share Internally</span>
-              </button>
             </div>
           </div>
         </div>

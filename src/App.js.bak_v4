@@ -85,6 +85,7 @@ function App() {
 
       if (data) {
         setUserName(data.full_name);
+        setOnboardingData(data); // CRITICAL: Ensure onboardingData is set
         setCurrentPage('dashboard');
       } else {
         // No profile yet, show onboarding
@@ -412,12 +413,14 @@ function App() {
 
     if (currentPage === 'ai-impact') {
       return (
-        <AIImpactDashboard
-          onBack={navigateToDashboard}
-          t={t}
-          farmerName={userName}
-          locationData={onboardingData}
-        />
+        <ErrorBoundary>
+          <AIImpactDashboard
+            onBack={navigateToDashboard}
+            t={t}
+            farmerName={userName}
+            locationData={onboardingData}
+          />
+        </ErrorBoundary>
       );
     }
 

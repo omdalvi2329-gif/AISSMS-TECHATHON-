@@ -26,7 +26,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { languages } from './translations';
 import './Dashboard.css';
 
-const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNavigateToGlobalMarket, onNavigateToCommunity, onNavigateToAIChat, onNavigateToSeasonalAdvice, onNavigateToSettings, onNavigateToProfile, onNavigateToImpact, farmerName, currentLanguage, onLanguageChange, t }) => {
+const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNavigateToGlobalMarket, onNavigateToCommunity, onNavigateToAIChat, onNavigateToSeasonalAdvice, onNavigateToSettings, onNavigateToProfile, onNavigateToImpact, onNavigateToMarketReport, farmerName, currentLanguage, onLanguageChange, t }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [suggestionIndex, setSuggestionIndex] = useState(0);
@@ -44,7 +44,7 @@ const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNaviga
       setSuggestionIndex((prev) => (prev + 1) % suggestions.length);
     }, 3000);
     return () => clearInterval(timer);
-  }, []);
+  }, [suggestions.length]);
 
   const firstName = farmerName ? farmerName.split(' ')[0] : '';
   const greeting = t.aiGreeting.replace('{name}', firstName || 'Farmer');
@@ -110,12 +110,6 @@ const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNaviga
       color: "#64748b",
       onClick: onNavigateToSettings
     }
-  ];
-
-  const sidebarItems = [
-    { icon: <User size={20} />, label: t.profile, onClick: onNavigateToProfile },
-    { icon: <SettingsIcon size={20} />, label: t.settings, onClick: onNavigateToSettings },
-    { icon: <Globe size={20} />, label: t.language, onClick: () => setIsLangOpen(!isLangOpen) },
   ];
 
   return (
@@ -235,14 +229,14 @@ const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNaviga
                     <SettingsIcon size={20} className="nav-icon-modern" />
                     <span>Settings</span>
                   </button>
-                  <button className="nav-item-modern" onClick={() => setIsLangOpen(true)}>
+                  <button className="nav-item-modern" onClick={() => { setIsLangOpen(true); setIsSidebarOpen(false); }}>
                     <Globe size={20} className="nav-icon-modern" />
                     <span>Language</span>
                   </button>
 
                   <div className="drawer-divider-modern"></div>
 
-                  <button className="nav-item-modern logout-item-modern" onClick={onLogout}>
+                  <button className="nav-item-modern logout-item-modern" onClick={() => { onLogout(); setIsSidebarOpen(false); }}>
                     <LogOut size={20} className="nav-icon-modern" />
                     <span>Logout</span>
                   </button>

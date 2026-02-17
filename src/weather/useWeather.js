@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { supabase } from '../supabaseClient';
 
 const clamp01 = (n) => Math.min(1, Math.max(0, n));
 
@@ -312,6 +313,22 @@ export const useWeather = ({ apiKey, currentLanguage }) => {
       const result = await getWeatherByCoords(coords);
 
       if (inFlightRef.current !== requestKey) return;
+
+      // Save to Supabase
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase.from('weather_queries').insert([{
+            user_id: user.id,
+            location: result.current.city,
+            temperature: result.current.temp,
+            humidity: result.current.humidity,
+            condition: result.current.description
+          }]);
+        }
+      } catch (dbErr) {
+        console.error('Error saving weather query:', dbErr);
+      }
 
       setState({
         status: 'success',
