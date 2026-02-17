@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { supabase } from './supabaseClient';
 import { 
   Home, 
   MessageSquare, 
@@ -40,6 +41,28 @@ const GlobalMarketHome = ({ t }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showLogisticsDrawer, setShowLogisticsDrawer] = useState(false);
+  const [dbProfile, setDbProfile] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchProfile = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user && isMounted) {
+          const { data } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('user_id', user.id)
+            .single();
+          if (data && isMounted) setDbProfile(data);
+        }
+      } catch (err) {
+        if (isMounted) console.error("Error fetching profile:", err);
+      }
+    };
+    fetchProfile();
+    return () => { isMounted = false; };
+  }, []);
 
   const cropsData = {
     "Organic Turmeric": {
@@ -322,18 +345,36 @@ const GlobalMarketHome = ({ t }) => {
     alert(`Generating Market Intelligence Report for ${selectedCrop}...\nReport will be downloaded shortly.`);
   };
 
-  const submitBuyerRequest = (e) => {
+  const submitBuyerRequest = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { error } = await supabase.from('market_requests').insert([{
+        user_id: user.id,
+        crop_name: selectedCrop,
+        quantity: e.target.elements[0].value,
+        expected_price: parseFloat(e.target.elements[1].value),
+        location: dbProfile?.village ? `${dbProfile.village}, ${dbProfile.state}` : "Unknown",
+        status: 'pending'
+      }]);
+
+      if (error) throw error;
+
       setIsSubmitted(true);
       setTimeout(() => {
         setShowBuyerModal(false);
         setIsSubmitted(false);
         setSelectedBuyer(null);
       }, 2000);
-    }, 1500);
+    } catch (err) {
+      alert("Error submitting request: " + err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -762,7 +803,12 @@ const GlobalMarketHome = ({ t }) => {
               {!isSubmitted ? (
                 <>
                   <div className="modal-header">
-                    <ShieldCheck size={32} className="text-green-500 mb-2" />
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="p-2 bg-green-500/10 rounded-lg">
+                        <ShieldCheck size={24} className="text-green-500" />
+                      </div>
+                      <span className="text-xs font-bold text-green-500 uppercase tracking-wider">Secure Connection</span>
+                    </div>
                     <h2>Request Connection: {selectedBuyer?.country}</h2>
                     <p>Connect with {selectedBuyer?.importers} verified importers in {selectedBuyer?.country}.</p>
                   </div>
@@ -790,10 +836,15 @@ const GlobalMarketHome = ({ t }) => {
                 </>
               ) : (
                 <div className="submission-success py-10 text-center">
-                  <CheckCircle size={64} className="text-green-500 mx-auto mb-4" />
-                  <h2 className="text-2xl font-bold mb-2">Request Submitted!</h2>
-                  <p className="text-gray-400">Our trade desk has received your request for {selectedBuyer?.country}.</p>
-                  <p className="text-green-400 mt-4 font-semibold">Verification Code: AS-EXP-{Math.floor(Math.random()*9000)+1000}</p>
+                  <div className="success-icon-wrapper">
+                    <CheckCircle size={40} className="text-green-500" />
+                  </div>
+                  <h2 className="text-2xl font-bold mb-2 text-white">Request Submitted!</h2>
+                  <p className="text-gray-400 mb-8">Our trade desk has received your request for {selectedBuyer?.country}.</p>
+                  <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+                    <p className="text-xs text-gray-500 uppercase tracking-widest mb-2 font-bold">Verification Code</p>
+                    <p className="text-2xl font-mono text-green-400 font-bold tracking-tighter">AS-EXP-{Math.floor(Math.random()*9000)+1000}</p>
+                  </div>
                 </div>
               )}
             </motion.div>
@@ -808,14 +859,58 @@ const GlobalMarketHome = ({ t }) => {
 const GlobalMarketPosts = ({ t }) => {
   const [interestedPosts, setInterestedPosts] = useState({});
 
-  const handleInterest = (postId) => {
-    setInterestedPosts(prev => ({ ...prev, [postId]: true }));
-    alert("Request sent to buyer. Our team will mediate.");
+  useEffect(() => {
+    let isMounted = true;
+    const fetchInterests = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user && isMounted) {
+          const { data } = await supabase
+            .from('post_interest')
+            .select('post_id')
+            .eq('user_id', user.id);
+          
+          if (data && isMounted) {
+            const interests = {};
+            data.forEach(item => interests[item.post_id] = true);
+            setInterestedPosts(interests);
+          }
+        }
+      } catch (err) {
+        if (isMounted) console.error("Error fetching interests:", err);
+      }
+    };
+    fetchInterests();
+    return () => { isMounted = false; };
+  }, []);
+
+  const handleInterest = async (postId) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // Update UI immediately for best UX
+      setInterestedPosts(prev => ({ ...prev, [postId]: true }));
+      alert("Your request has been sent! Our team will mediate the connection.");
+
+      if (!user) return; // Stop here if guest, but UI is already updated
+
+      // Attempt to save to database, but don't block UI if it fails (since these are mock posts)
+      const { error } = await supabase.from('post_interest').insert([{
+        user_id: user.id,
+        post_id: postId
+      }]);
+
+      if (error && error.code !== '23505') {
+        console.error("Database sync error (non-critical):", error);
+      }
+    } catch (err) {
+      console.error("Interest interaction error:", err);
+    }
   };
 
   const posts = [
     {
-      id: 1,
+      id: "00000000-0000-0000-0000-000000000001",
       company: "Indo-Euro Logistics",
       crop: "Dehydrated Onion Powder",
       quantity: "50 Metric Tons",
@@ -827,7 +922,7 @@ const GlobalMarketPosts = ({ t }) => {
       verified: true
     },
     {
-      id: 2,
+      id: "00000000-0000-0000-0000-000000000002",
       company: "Gulf Food Importers",
       crop: "Basmati Rice (Pusa 1121)",
       quantity: "200 Metric Tons",
@@ -839,7 +934,7 @@ const GlobalMarketPosts = ({ t }) => {
       verified: true
     },
     {
-      id: 3,
+      id: "00000000-0000-0000-0000-000000000003",
       company: "Alpine Organic Spices",
       crop: "Organic Turmeric",
       quantity: "15 Metric Tons",
@@ -851,7 +946,7 @@ const GlobalMarketPosts = ({ t }) => {
       verified: true
     },
     {
-      id: 4,
+      id: "00000000-0000-0000-0000-000000000004",
       company: "Tokyo Bio-Trade",
       crop: "Neem Powder",
       quantity: "10 Metric Tons",
