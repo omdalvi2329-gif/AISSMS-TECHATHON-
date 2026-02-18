@@ -1,13 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { locationData } from './locationData';
 import './FarmerOnboarding.css';
-
-const statesData = {
-  "Maharashtra": ["Pune", "Nashik", "Nagpur", "Ahmednagar", "Solapur", "Satara"],
-  "Karnataka": ["Belagavi", "Bagalkot", "Vijayapura", "Dharwad", "Haveri"],
-  "Gujarat": ["Ahmedabad", "Surat", "Rajkot", "Bhavnagar", "Junagadh"],
-  "Punjab": ["Amritsar", "Ludhiana", "Jalandhar", "Patiala", "Bathinda"],
-  "Madhya Pradesh": ["Indore", "Bhopal", "Jabalpur", "Gwalior", "Ujjain"]
-};
 
 const FarmerOnboarding = ({ onComplete, t }) => {
   const [onboardingData, setOnboardingData] = useState({
@@ -19,21 +12,43 @@ const FarmerOnboarding = ({ onComplete, t }) => {
   });
 
   const [districts, setDistricts] = useState([]);
+  const [talukas, setTalukas] = useState([]);
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (onboardingData.state) {
-      setDistricts(statesData[onboardingData.state] || []);
-      setOnboardingData(prev => ({ ...prev, district: '' }));
+      setDistricts(Object.keys(locationData[onboardingData.state] || {}));
     } else {
       setDistricts([]);
     }
   }, [onboardingData.state]);
 
+  useEffect(() => {
+    if (onboardingData.state && onboardingData.district) {
+      setTalukas(locationData[onboardingData.state][onboardingData.district] || []);
+    } else {
+      setTalukas([]);
+    }
+  }, [onboardingData.state, onboardingData.district]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     
-    if (name === 'pinCode') {
+    if (name === 'state') {
+      setOnboardingData({
+        state: value,
+        district: '',
+        taluka: '',
+        village: onboardingData.village,
+        pinCode: onboardingData.pinCode
+      });
+    } else if (name === 'district') {
+      setOnboardingData(prev => ({
+        ...prev,
+        district: value,
+        taluka: ''
+      }));
+    } else if (name === 'pinCode') {
       const numericValue = value.replace(/\D/g, '').slice(0, 6);
       setOnboardingData(prev => ({ ...prev, [name]: numericValue }));
     } else {
@@ -49,7 +64,7 @@ const FarmerOnboarding = ({ onComplete, t }) => {
     const newErrors = {};
     if (!onboardingData.state) newErrors.state = 'Please select a state';
     if (!onboardingData.district) newErrors.district = 'Please select a district';
-    if (!onboardingData.taluka.trim()) newErrors.taluka = 'Please enter taluka';
+    if (!onboardingData.taluka) newErrors.taluka = 'Please select a taluka';
     if (!onboardingData.village.trim()) newErrors.village = 'Please enter village';
     if (!onboardingData.pinCode || onboardingData.pinCode.length !== 6) {
       newErrors.pinCode = 'Please enter a valid 6-digit PIN code';
@@ -67,7 +82,7 @@ const FarmerOnboarding = ({ onComplete, t }) => {
 
   const isFormValid = onboardingData.state && 
                     onboardingData.district && 
-                    onboardingData.taluka.trim() && 
+                    onboardingData.taluka && 
                     onboardingData.village.trim() && 
                     onboardingData.pinCode.length === 6;
 
@@ -92,7 +107,7 @@ const FarmerOnboarding = ({ onComplete, t }) => {
               onChange={handleInputChange}
             >
               <option value="">Select State</option>
-              {Object.keys(statesData).map(state => (
+              {Object.keys(locationData).map(state => (
                 <option key={state} value={state}>{state}</option>
               ))}
             </select>
@@ -119,19 +134,23 @@ const FarmerOnboarding = ({ onComplete, t }) => {
             {errors.district && <span className="error-message">{errors.district}</span>}
           </div>
 
-          {/* Taluka Input */}
+          {/* Taluka Dropdown */}
           <div className="form-group">
             <label className="form-label">
               <span className="icon">🏛️</span> Taluka / Tehsil
             </label>
-            <input
-              type="text"
+            <select
               name="taluka"
-              className={`form-input ${errors.taluka ? 'error' : ''}`}
-              placeholder="Enter Taluka or Tehsil"
+              className={`form-input select-input ${errors.taluka ? 'error' : ''}`}
               value={onboardingData.taluka}
               onChange={handleInputChange}
-            />
+              disabled={!onboardingData.district}
+            >
+              <option value="">Select Taluka</option>
+              {talukas.map(taluka => (
+                <option key={taluka} value={taluka}>{taluka}</option>
+              ))}
+            </select>
             {errors.taluka && <span className="error-message">{errors.taluka}</span>}
           </div>
 
@@ -170,7 +189,7 @@ const FarmerOnboarding = ({ onComplete, t }) => {
 
           <button
             type="submit"
-            className="continue-button"
+            className="login-button slide-up"
             disabled={!isFormValid}
           >
             Continue

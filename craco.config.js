@@ -3,5 +3,10 @@ module.exports = {
     postcss: {
       plugins: [require('@tailwindcss/postcss'), require('autoprefixer')]
     }
-  }
+  },
+  devServer: {
+    client: {
+      webSocketURL: 'auto://0.0.0.0:0/ws',
+    },
+  },
 };

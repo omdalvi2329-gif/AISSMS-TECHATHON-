@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from './supabaseClient';
 import { translations, languages } from './translations';
 import Dashboard from './Dashboard';
@@ -21,6 +21,7 @@ function App() {
   });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [session, setSession] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState('loading'); // 'loading', 'login', 'onboarding', 'dashboard', ...
   const [userName, setUserName] = useState('');
   const [onboardingData, setOnboardingData] = useState(null);
@@ -29,6 +30,34 @@ function App() {
   const [overviewVideoError, setOverviewVideoError] = useState('');
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [otp, setOtp] = useState('');
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    if (otp.length !== 6) return;
+
+    setIsSubmitting(true);
+    try {
+      const phone = `+91${formData.mobileNumber}`;
+      const { data, error } = await supabase.auth.verifyOtp({
+        phone: phone,
+        token: otp,
+        type: 'sms',
+      });
+
+      if (error) throw error;
+
+      if (data.session) {
+        setSession(data.session);
+        setIsLoggedIn(true);
+        // fetchUserProfile will handle redirection
+      }
+    } catch (error) {
+      setErrors({ otp: error.message });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const [formData, setFormData] = useState({
     fullName: '',
     mobileNumber: '',
@@ -45,32 +74,72 @@ function App() {
   const t = translations[currentLanguage];
 
   useEffect(() => {
-    // Check active session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session) {
-        setIsLoggedIn(true);
-        fetchUserProfile(session.user.id);
-      } else {
+    const initializeAuth = async () => {
+      try {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        setSession(currentSession);
+        
+        if (currentSession) {
+          setIsLoggedIn(true);
+          const profile = await fetchUserProfile(currentSession.user.id);
+          
+          if (profile) {
+            const isProfileIncomplete = !profile.state || !profile.village;
+            if (isProfileIncomplete) {
+              setCurrentPage('onboarding');
+            } else {
+              const hash = window.location.hash || '';
+              const routeMap = {
+                '#/farmer-profile': 'farmer-profile',
+                '#/settings': 'settings',
+                '#/dashboard': 'dashboard',
+                '#/ai-chat': 'ai-chat',
+                '#/seasonal-advice': 'seasonal-advice',
+                '#/ai-impact': 'ai-impact',
+                '#/community': 'community',
+                '#/weather': 'weather',
+                '#/market': 'market',
+                '#/market-report': 'market-report',
+                '#/global-market': 'global-market'
+              };
+              const targetPage = routeMap[hash] || (hash === '' || hash === '#/' ? 'dashboard' : null);
+              setCurrentPage(targetPage || 'dashboard');
+            }
+          } else {
+            setCurrentPage('onboarding');
+          }
+        } else {
+          setIsLoggedIn(false);
+          setCurrentPage('login');
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
         setCurrentPage('login');
+      } finally {
+        setAuthLoading(false);
       }
-    });
+    };
 
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    initializeAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
         setIsLoggedIn(true);
-        fetchUserProfile(session.user.id);
+        if (!authLoading) {
+          fetchUserProfile(session.user.id);
+        }
       } else {
         setIsLoggedIn(false);
         setCurrentPage('login');
+        if (window.location.hash !== '#/' && window.location.hash !== '') {
+          window.location.hash = '#/';
+        }
       }
     });
 
     return () => subscription.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchUserProfile = async (userId) => {
@@ -85,14 +154,21 @@ function App() {
 
       if (data) {
         setUserName(data.full_name);
-        setCurrentPage('dashboard');
-      } else {
-        // No profile yet, show onboarding
-        setCurrentPage('onboarding');
+        const profileData = {
+          state: data.state,
+          village: data.village,
+          // Mapping for UI if needed, though DB only has state/village
+          district: '',
+          taluka: '',
+          pinCode: ''
+        };
+        setOnboardingData(profileData);
+        return data;
       }
+      return null;
     } catch (error) {
       console.error('Error fetching profile:', error.message);
-      setCurrentPage('login');
+      return null;
     }
   };
 
@@ -102,17 +178,37 @@ function App() {
 
       if (!isLoggedIn) return;
 
-      if (hash === '#/farmer-profile') {
-        setCurrentPage('farmer-profile');
+      const isProfileIncomplete = !onboardingData || !onboardingData.state || !onboardingData.village;
+      
+      if (currentPage !== 'onboarding' && isProfileIncomplete) {
+        setCurrentPage('onboarding');
         return;
       }
 
-      if (hash === '#/settings') {
-        setCurrentPage('settings');
+      if (currentPage === 'onboarding' && !isProfileIncomplete) {
+        setCurrentPage('dashboard');
         return;
       }
 
-      if (hash === '#/dashboard' || hash === '' || hash === '#/') {
+      const routeMap = {
+        '#/farmer-profile': 'farmer-profile',
+        '#/settings': 'settings',
+        '#/dashboard': 'dashboard',
+        '#/ai-chat': 'ai-chat',
+        '#/seasonal-advice': 'seasonal-advice',
+        '#/ai-impact': 'ai-impact',
+        '#/community': 'community',
+        '#/weather': 'weather',
+        '#/market': 'market',
+        '#/market-report': 'market-report',
+        '#/global-market': 'global-market'
+      };
+
+      const targetPage = routeMap[hash] || (hash === '' || hash === '#/' ? 'dashboard' : null);
+      
+      if (targetPage && targetPage !== currentPage) {
+        setCurrentPage(targetPage);
+      } else if (currentPage === 'syncing') {
         setCurrentPage('dashboard');
       }
     };
@@ -120,10 +216,12 @@ function App() {
     syncFromHash();
     window.addEventListener('hashchange', syncFromHash);
     return () => window.removeEventListener('hashchange', syncFromHash);
-  }, [isLoggedIn]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn, onboardingData]);
 
   const navigateToCommunity = () => {
     setCurrentPage('community');
+    window.location.hash = '#/community';
   };
 
   const handleLogout = async () => {
@@ -142,18 +240,22 @@ function App() {
 
   const navigateToWeather = () => {
     setCurrentPage('weather');
+    window.location.hash = '#/weather';
   };
 
   const navigateToMarket = () => {
     setCurrentPage('market');
+    window.location.hash = '#/market';
   };
 
   const navigateToMarketReport = () => {
     setCurrentPage('market-report');
+    window.location.hash = '#/market-report';
   };
 
   const navigateToGlobalMarket = () => {
     setCurrentPage('global-market');
+    window.location.hash = '#/global-market';
   };
 
   const navigateToDashboard = () => {
@@ -163,10 +265,12 @@ function App() {
 
   const navigateToAIChat = () => {
     setCurrentPage('ai-chat');
+    window.location.hash = '#/ai-chat';
   };
 
   const navigateToSeasonalAdvice = () => {
     setCurrentPage('seasonal-advice');
+    window.location.hash = '#/seasonal-advice';
   };
 
   const navigateToSettings = () => {
@@ -181,6 +285,7 @@ function App() {
 
   const navigateToImpact = () => {
     setCurrentPage('ai-impact');
+    window.location.hash = '#/ai-impact';
   };
 
   // Form validation
@@ -210,14 +315,12 @@ function App() {
     const { name, value, type, checked } = e.target;
     
     if (name === 'mobileNumber') {
-      // Only allow digits
       const numericValue = value.replace(/\D/g, '').slice(0, 10);
       setFormData(prev => ({
         ...prev,
         [name]: numericValue
       }));
     } else if (name === 'fullName') {
-      // Only allow alphabetical characters and spaces
       const alphabetValue = value.replace(/[^a-zA-Z\s]/g, '');
       setFormData(prev => ({
         ...prev,
@@ -235,7 +338,6 @@ function App() {
       }));
     }
     
-    // Clear error for this field when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -269,54 +371,29 @@ function App() {
     }
   };
 
-  const handleVerifyOtp = async (e) => {
-    e.preventDefault();
-    if (otp.length !== 6) return;
-
-    setIsSubmitting(true);
-    try {
-      const phone = `+91${formData.mobileNumber}`;
-      const { data, error } = await supabase.auth.verifyOtp({
-        phone: phone,
-        token: otp,
-        type: 'sms',
-      });
-
-      if (error) throw error;
-
-      if (data.session) {
-        setSession(data.session);
-        setIsLoggedIn(true);
-        // fetchUserProfile will be triggered by useEffect
-      }
-    } catch (error) {
-      setErrors({ otp: error.message });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   const handleOnboardingComplete = async (data) => {
     try {
       const { error } = await supabase
         .from('user_profiles')
-        .insert([{
+        .upsert([{
           user_id: session.user.id,
-          full_name: formData.fullName,
+          full_name: formData.fullName || userName,
           phone_number: session.user.phone,
-          village: data.village,
-          state: data.state
-        }]);
+          state: data.state,
+          village: data.village
+          // Note: district, taluka, pin_code are not in current schema
+          // We only save what the schema supports to avoid 400 errors
+        }], { onConflict: 'user_id' });
 
       if (error) throw error;
 
       setOnboardingData(data);
-      setUserName(formData.fullName);
+      setUserName(formData.fullName || userName);
       setIsLoggedIn(true);
       setCurrentPage('dashboard');
     } catch (error) {
       console.error('Error creating profile:', error.message);
-      setErrors({ submit: 'Failed to create profile. Please try again.' });
+      setErrors({ submit: 'Failed to create profile. Please check connection or schema.' });
     }
   };
 
@@ -330,9 +407,9 @@ function App() {
   const isLocalMp4 = typeof overviewVideoUrl === 'string' && overviewVideoUrl.toLowerCase().endsWith('.mp4');
   const overviewVideoSrc = isLocalMp4 ? `${overviewVideoUrl}?v=${overviewVideoNonce}` : overviewVideoUrl;
 
-  if (currentPage === 'loading') {
+  if (authLoading || currentPage === 'loading') {
     return (
-      <div className="loading-screen" style={{ backgroundColor: '#0a0e0a', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="loading-screen" style={{ backgroundColor: '#0a0e0a', height: '100vh', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
         <div className="spinner" style={{ border: '4px solid rgba(34, 197, 94, 0.1)', borderTop: '4px solid #22c55e', borderRadius: '50%', width: '40px', height: '40px', animation: 'spin 1s linear infinite' }}></div>
       </div>
     );
@@ -562,21 +639,23 @@ function App() {
           ) : (
             <form className="login-form" onSubmit={handleVerifyOtp}>
               <div className="form-group">
-                <label htmlFor="otp" className="form-label">
+                <label className="form-label" style={{ textAlign: 'center' }}>
                   Enter 6-Digit OTP sent to +91 {formData.mobileNumber}
                 </label>
                 <input
                   type="text"
-                  id="otp"
-                  className={`form-input ${errors.otp ? 'error' : ''}`}
-                  placeholder="000000"
+                  inputMode="numeric"
+                  className={`form-input otp-single-input ${errors.otp ? 'error' : ''}`}
+                  placeholder="Enter 6-digit OTP"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   maxLength="6"
                   required
+                  autoFocus
+                  style={{ textAlign: 'center', letterSpacing: '4px', fontSize: '1.2rem' }}
                 />
                 {errors.otp && (
-                  <span className="error-message">{errors.otp}</span>
+                  <span className="error-message" style={{ textAlign: 'center' }}>{errors.otp}</span>
                 )}
               </div>
 
@@ -585,7 +664,12 @@ function App() {
                 className="login-button slide-up"
                 disabled={otp.length !== 6 || isSubmitting}
               >
-                {isSubmitting ? 'Verifying...' : 'Verify OTP'}
+                {isSubmitting ? (
+                  <>
+                    <span className="spinner"></span>
+                    Verifying...
+                  </>
+                ) : 'Verify OTP'}
               </button>
               
               <button

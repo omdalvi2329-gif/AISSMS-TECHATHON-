@@ -316,6 +316,30 @@ body {
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
 }
 
+.otp-single-input {
+  width: 100% !important;
+  text-align: center !important;
+  letter-spacing: 0.5rem !important;
+  font-size: 1.5rem !important;
+  font-weight: 700 !important;
+  padding: 18px !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 16px !important;
+  color: #22c55e !important;
+  margin-top: 12px;
+}
+
+.otp-single-input:focus {
+  border-color: #22c55e !important;
+  background: rgba(34, 197, 94, 0.05) !important;
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.15) !important;
+}
+
+.otp-input-container, .otp-box {
+  display: none !important;
+}
+
 /* Checkbox Styles */
 .checkbox-group {
   display: flex;

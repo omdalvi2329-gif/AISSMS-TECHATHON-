@@ -371,7 +371,6 @@ const Settings = ({ onBack, t, currentLanguage, onLanguageChange, farmerName, lo
     setSectionSave('privacy', { saving: false, error: '', ok: true });
     showToast('success', 'Logged out');
     window.location.hash = '#/';
-    window.location.reload();
   };
 
   const handleDeleteAccount = async () => {
@@ -392,7 +391,6 @@ const Settings = ({ onBack, t, currentLanguage, onLanguageChange, farmerName, lo
     setSectionSave('privacy', { saving: false, error: '', ok: true });
     showToast('success', 'Account deleted');
     window.location.hash = '#/';
-    window.location.reload();
   };
 
   const fetchPushTokenIfPossible = async () => {
