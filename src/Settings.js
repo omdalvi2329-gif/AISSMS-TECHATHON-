@@ -168,7 +168,7 @@ const Settings = ({ onBack, t, currentLanguage, onLanguageChange, farmerName, lo
   const api = useMemo(
     () =>
       createApiClient({
-        baseUrl: '',
+        baseUrl: 'http://localhost:5000',
         getAuthToken: () => getSessionToken()
       }),
     []
@@ -434,7 +434,11 @@ const Settings = ({ onBack, t, currentLanguage, onLanguageChange, farmerName, lo
                 const nextTheme = settings.general.theme === 'dark' ? 'light' : 'dark';
                 const next = { ...settings, general: { ...settings.general, theme: nextTheme } };
                 setSettings(next);
-                await saveOrQueue('general', 'general', api.putGeneralSettings, next.general);
+                await saveOrQueue('general', 'general', api.putGeneralSettings, {
+                  darkMode: nextTheme === 'dark',
+                  offlineMode,
+                  language: next.general.language
+                });
               }}
             />
 
@@ -442,10 +446,15 @@ const Settings = ({ onBack, t, currentLanguage, onLanguageChange, farmerName, lo
               icon={<ShieldCheck size={20} />}
               label="Offline mode"
               checked={offlineMode}
-              onChange={() => {
+              onChange={async () => {
                 const next = !offlineMode;
                 setOfflineMode(next);
                 showToast('info', next ? 'Offline mode enabled.' : 'Offline mode disabled.');
+                await saveOrQueue('general', 'general', api.putGeneralSettings, {
+                  darkMode: settings.general.theme === 'dark',
+                  offlineMode: next,
+                  language: settings.general.language
+                });
                 if (!next) flushQueue();
               }}
             />
@@ -461,7 +470,11 @@ const Settings = ({ onBack, t, currentLanguage, onLanguageChange, farmerName, lo
                   const lang = e.target.value;
                   setSettings((prev) => ({ ...prev, general: { ...prev.general, language: lang } }));
                   onLanguageChange(lang);
-                  await saveOrQueue('general', 'general', api.putGeneralSettings, { ...settings.general, language: lang });
+                  await saveOrQueue('general', 'general', api.putGeneralSettings, {
+                    darkMode: settings.general.theme === 'dark',
+                    offlineMode,
+                    language: lang
+                  });
                 }}
                 className="setting-select"
               >

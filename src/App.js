@@ -1,5 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { supabase } from './supabaseClient';
+import React, { useEffect, useState } from 'react';
 import { translations, languages } from './translations';
 import Dashboard from './Dashboard';
 import WeatherDashboard from './weather/WeatherDashboard';
@@ -20,48 +19,20 @@ function App() {
     return localStorage.getItem('agriSetuLang') || 'en';
   });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [session, setSession] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState('loading'); // 'loading', 'login', 'onboarding', 'dashboard', ...
+  const [currentPage, setCurrentPage] = useState('login'); // 'loading', 'login', 'onboarding', 'dashboard', ...
   const [userName, setUserName] = useState('');
   const [onboardingData, setOnboardingData] = useState(null);
   const [isOverviewVideoOpen, setIsOverviewVideoOpen] = useState(false);
   const [overviewVideoNonce, setOverviewVideoNonce] = useState(0);
   const [overviewVideoError, setOverviewVideoError] = useState('');
+  const [loginMode] = useState('otp');
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [otp, setOtp] = useState('');
-
-  const handleVerifyOtp = async (e) => {
-    e.preventDefault();
-    if (otp.length !== 6) return;
-
-    setIsSubmitting(true);
-    try {
-      const phone = `+91${formData.mobileNumber}`;
-      const { data, error } = await supabase.auth.verifyOtp({
-        phone: phone,
-        token: otp,
-        type: 'sms',
-      });
-
-      if (error) throw error;
-
-      if (data.session) {
-        setSession(data.session);
-        setIsLoggedIn(true);
-        // fetchUserProfile will handle redirection
-      }
-    } catch (error) {
-      setErrors({ otp: error.message });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
+  const [generatedOtp, setGeneratedOtp] = useState('');
   const [formData, setFormData] = useState({
     fullName: '',
     mobileNumber: '',
-    termsAccepted: false
+    termsAccepted: false,
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -74,327 +45,195 @@ function App() {
   const t = translations[currentLanguage];
 
   useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        setSession(currentSession);
-        
-        if (currentSession) {
-          setIsLoggedIn(true);
-          const profile = await fetchUserProfile(currentSession.user.id);
-          
-          if (profile) {
-            const isProfileIncomplete = !profile.state || !profile.village;
-            if (isProfileIncomplete) {
-              setCurrentPage('onboarding');
-            } else {
-              const hash = window.location.hash || '';
-              const routeMap = {
-                '#/farmer-profile': 'farmer-profile',
-                '#/settings': 'settings',
-                '#/dashboard': 'dashboard',
-                '#/ai-chat': 'ai-chat',
-                '#/seasonal-advice': 'seasonal-advice',
-                '#/ai-impact': 'ai-impact',
-                '#/community': 'community',
-                '#/weather': 'weather',
-                '#/market': 'market',
-                '#/market-report': 'market-report',
-                '#/global-market': 'global-market'
-              };
-              const targetPage = routeMap[hash] || (hash === '' || hash === '#/' ? 'dashboard' : null);
-              setCurrentPage(targetPage || 'dashboard');
-            }
-          } else {
-            setCurrentPage('onboarding');
-          }
-        } else {
-          setIsLoggedIn(false);
-          setCurrentPage('login');
-        }
-      } catch (error) {
-        console.error('Auth initialization error:', error);
-        setCurrentPage('login');
-      } finally {
-        setAuthLoading(false);
-      }
-    };
-
-    initializeAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session) {
-        setIsLoggedIn(true);
-        if (!authLoading) {
-          fetchUserProfile(session.user.id);
-        }
-      } else {
-        setIsLoggedIn(false);
-        setCurrentPage('login');
-        if (window.location.hash !== '#/' && window.location.hash !== '') {
-          window.location.hash = '#/';
-        }
-      }
-    });
-
-    return () => subscription.unsubscribe();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setCurrentPage('login');
   }, []);
-
-  const fetchUserProfile = async (userId) => {
-    try {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      if (error && error.code !== 'PGRST116') throw error;
-
-      if (data) {
-        setUserName(data.full_name);
-        const profileData = {
-          state: data.state,
-          village: data.village,
-          // Mapping for UI if needed, though DB only has state/village
-          district: '',
-          taluka: '',
-          pinCode: ''
-        };
-        setOnboardingData(profileData);
-        return data;
-      }
-      return null;
-    } catch (error) {
-      console.error('Error fetching profile:', error.message);
-      return null;
-    }
-  };
-
-  useEffect(() => {
-    const syncFromHash = () => {
-      const hash = window.location.hash || '';
-
-      if (!isLoggedIn) return;
-
-      const isProfileIncomplete = !onboardingData || !onboardingData.state || !onboardingData.village;
-      
-      if (currentPage !== 'onboarding' && isProfileIncomplete) {
-        setCurrentPage('onboarding');
-        return;
-      }
-
-      if (currentPage === 'onboarding' && !isProfileIncomplete) {
-        setCurrentPage('dashboard');
-        return;
-      }
-
-      const routeMap = {
-        '#/farmer-profile': 'farmer-profile',
-        '#/settings': 'settings',
-        '#/dashboard': 'dashboard',
-        '#/ai-chat': 'ai-chat',
-        '#/seasonal-advice': 'seasonal-advice',
-        '#/ai-impact': 'ai-impact',
-        '#/community': 'community',
-        '#/weather': 'weather',
-        '#/market': 'market',
-        '#/market-report': 'market-report',
-        '#/global-market': 'global-market'
-      };
-
-      const targetPage = routeMap[hash] || (hash === '' || hash === '#/' ? 'dashboard' : null);
-      
-      if (targetPage && targetPage !== currentPage) {
-        setCurrentPage(targetPage);
-      } else if (currentPage === 'syncing') {
-        setCurrentPage('dashboard');
-      }
-    };
-
-    syncFromHash();
-    window.addEventListener('hashchange', syncFromHash);
-    return () => window.removeEventListener('hashchange', syncFromHash);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoggedIn, onboardingData]);
 
   const navigateToCommunity = () => {
     setCurrentPage('community');
-    window.location.hash = '#/community';
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
     setIsLoggedIn(false);
     setCurrentPage('login');
     setUserName('');
-    setSession(null);
     setOnboardingData(null);
+    setErrors({});
+    setShowOtpInput(false);
+    setOtp('');
+    setGeneratedOtp('');
     setFormData({
       fullName: '',
       mobileNumber: '',
-      termsAccepted: false
+      termsAccepted: false,
     });
   };
 
   const navigateToWeather = () => {
     setCurrentPage('weather');
-    window.location.hash = '#/weather';
   };
 
   const navigateToMarket = () => {
     setCurrentPage('market');
-    window.location.hash = '#/market';
   };
 
   const navigateToMarketReport = () => {
     setCurrentPage('market-report');
-    window.location.hash = '#/market-report';
   };
 
   const navigateToGlobalMarket = () => {
     setCurrentPage('global-market');
-    window.location.hash = '#/global-market';
   };
 
   const navigateToDashboard = () => {
     setCurrentPage('dashboard');
-    window.location.hash = '#/dashboard';
   };
 
   const navigateToAIChat = () => {
     setCurrentPage('ai-chat');
-    window.location.hash = '#/ai-chat';
   };
 
   const navigateToSeasonalAdvice = () => {
     setCurrentPage('seasonal-advice');
-    window.location.hash = '#/seasonal-advice';
   };
 
   const navigateToSettings = () => {
     setCurrentPage('settings');
-    window.location.hash = '#/settings';
   };
 
   const navigateToProfile = () => {
     setCurrentPage('farmer-profile');
-    window.location.hash = '#/farmer-profile';
   };
 
   const navigateToImpact = () => {
     setCurrentPage('ai-impact');
-    window.location.hash = '#/ai-impact';
   };
 
   // Form validation
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.fullName.trim()) {
       newErrors.fullName = t.nameRequired;
     }
-    
+
     if (!formData.mobileNumber.trim()) {
       newErrors.mobileNumber = t.mobileRequired;
     } else if (!/^\d{10}$/.test(formData.mobileNumber)) {
       newErrors.mobileNumber = t.mobileDigits;
     }
-    
+
     if (!formData.termsAccepted) {
       newErrors.terms = t.termsRequired;
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   // Handle input changes
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    
-    if (name === 'mobileNumber') {
-      const numericValue = value.replace(/\D/g, '').slice(0, 10);
-      setFormData(prev => ({
+    const { name, value } = e.target;
+
+    if (name === 'termsAccepted') {
+      setFormData((prev) => ({
         ...prev,
-        [name]: numericValue
-      }));
-    } else if (name === 'fullName') {
-      const alphabetValue = value.replace(/[^a-zA-Z\s]/g, '');
-      setFormData(prev => ({
-        ...prev,
-        [name]: alphabetValue
-      }));
-    } else if (type === 'checkbox') {
-      setFormData(prev => ({
-        ...prev,
-        [name]: checked
+        termsAccepted: e.target.checked,
       }));
     } else {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        [name]: value
+        [name]: value,
       }));
     }
-    
+
+    // Clear error for this field when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: ''
+        [name]: '',
       }));
     }
   };
 
-  // Handle form submission (Send OTP)
+  // Handle form submission (Login)
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (validateForm()) {
-      setIsSubmitting(true);
-      setErrors({});
-      
-      try {
+
+    setIsSubmitting(true);
+    try {
+      if (validateForm()) {
         const phone = `+91${formData.mobileNumber}`;
-        const { error } = await supabase.auth.signInWithOtp({
-          phone: phone,
+        const res = await fetch('http://localhost:5000/send-otp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ phone }),
         });
 
-        if (error) throw error;
-        
+        const contentType = res.headers.get('content-type') || '';
+        const payload = contentType.includes('application/json') ? await res.json().catch(() => ({})) : {};
+
+        if (!res.ok) {
+          const msg = payload?.message || `Failed to send OTP (${res.status})`;
+          throw new Error(msg);
+        }
+
+        setGeneratedOtp(String(payload?.otp || ''));
+        setOtp('');
         setShowOtpInput(true);
-      } catch (error) {
-        setErrors({ submit: error.message });
-      } finally {
-        setIsSubmitting(false);
+        return;
       }
+    } catch (error) {
+      setErrors({ submit: error?.message || 'Request failed. Please try again.' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+    if (otp.length !== 6) return;
+
+    setIsSubmitting(true);
+    try {
+      const phone = `+91${formData.mobileNumber}`;
+      const res = await fetch('http://localhost:5000/verify-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ phone, otp }),
+      });
+
+      const contentType = res.headers.get('content-type') || '';
+      const payload = contentType.includes('application/json') ? await res.json().catch(() => ({})) : {};
+
+      if (!res.ok) {
+        const msg = payload?.message || `OTP verification failed (${res.status})`;
+        throw new Error(msg);
+      }
+
+      if (!payload?.success) {
+        setErrors({ otp: 'Invalid OTP. Please try again.' });
+        return;
+      }
+
+      setIsLoggedIn(true);
+      setUserName(formData.fullName.trim());
+      setCurrentPage('dashboard');
+      setErrors({});
+    } catch (error) {
+      setErrors({ otp: error?.message || 'Invalid OTP. Please try again.' });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleOnboardingComplete = async (data) => {
-    try {
-      const { error } = await supabase
-        .from('user_profiles')
-        .upsert([{
-          user_id: session.user.id,
-          full_name: formData.fullName || userName,
-          phone_number: session.user.phone,
-          state: data.state,
-          village: data.village
-          // Note: district, taluka, pin_code are not in current schema
-          // We only save what the schema supports to avoid 400 errors
-        }], { onConflict: 'user_id' });
-
-      if (error) throw error;
-
-      setOnboardingData(data);
-      setUserName(formData.fullName || userName);
-      setIsLoggedIn(true);
-      setCurrentPage('dashboard');
-    } catch (error) {
-      console.error('Error creating profile:', error.message);
-      setErrors({ submit: 'Failed to create profile. Please check connection or schema.' });
-    }
+    setOnboardingData(data);
+    setCurrentPage('dashboard');
   };
 
   // Check if form is valid for button state
@@ -407,9 +246,9 @@ function App() {
   const isLocalMp4 = typeof overviewVideoUrl === 'string' && overviewVideoUrl.toLowerCase().endsWith('.mp4');
   const overviewVideoSrc = isLocalMp4 ? `${overviewVideoUrl}?v=${overviewVideoNonce}` : overviewVideoUrl;
 
-  if (authLoading || currentPage === 'loading') {
+  if (currentPage === 'loading') {
     return (
-      <div className="loading-screen" style={{ backgroundColor: '#0a0e0a', height: '100vh', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="loading-screen" style={{ backgroundColor: '#0a0e0a', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div className="spinner" style={{ border: '4px solid rgba(34, 197, 94, 0.1)', borderTop: '4px solid #22c55e', borderRadius: '50%', width: '40px', height: '40px', animation: 'spin 1s linear infinite' }}></div>
       </div>
     );
@@ -633,30 +472,32 @@ function App() {
                 className="login-button slide-up"
                 disabled={!isFormValid || isSubmitting}
               >
-                {isSubmitting ? 'Sending OTP...' : t.continue}
+                {isSubmitting ? 'Sending OTP...' : 'Send OTP'}
               </button>
             </form>
           ) : (
             <form className="login-form" onSubmit={handleVerifyOtp}>
               <div className="form-group">
-                <label className="form-label" style={{ textAlign: 'center' }}>
+                <label htmlFor="otp" className="form-label">
                   Enter 6-Digit OTP sent to +91 {formData.mobileNumber}
                 </label>
+                {generatedOtp ? (
+                  <p className="text-green-400 mt-2">Demo OTP: {generatedOtp}</p>
+                ) : null}
                 <input
                   type="text"
-                  inputMode="numeric"
-                  className={`form-input otp-single-input ${errors.otp ? 'error' : ''}`}
-                  placeholder="Enter 6-digit OTP"
+                  id="otp"
+                  className={`form-input ${errors.otp ? 'error' : ''}`}
+                  placeholder="000000"
                   value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  onChange={(e) => {
+                    setOtp(String(e.target.value || '').replace(/\D/g, '').slice(0, 6));
+                    if (errors.otp) setErrors((prev) => ({ ...prev, otp: '' }));
+                  }}
                   maxLength="6"
                   required
-                  autoFocus
-                  style={{ textAlign: 'center', letterSpacing: '4px', fontSize: '1.2rem' }}
                 />
-                {errors.otp && (
-                  <span className="error-message" style={{ textAlign: 'center' }}>{errors.otp}</span>
-                )}
+                {errors.otp && <span className="error-message">{errors.otp}</span>}
               </div>
 
               <button
@@ -664,19 +505,20 @@ function App() {
                 className="login-button slide-up"
                 disabled={otp.length !== 6 || isSubmitting}
               >
-                {isSubmitting ? (
-                  <>
-                    <span className="spinner"></span>
-                    Verifying...
-                  </>
-                ) : 'Verify OTP'}
+                {isSubmitting ? 'Verifying...' : 'Verify OTP'}
               </button>
-              
+
               <button
                 type="button"
                 className="text-button"
                 style={{ background: 'none', border: 'none', color: '#22c55e', marginTop: '15px', cursor: 'pointer', width: '100%' }}
-                onClick={() => setShowOtpInput(false)}
+                onClick={() => {
+                  setShowOtpInput(false);
+                  setOtp('');
+                  setGeneratedOtp('');
+                  setErrors({});
+                }}
+                disabled={isSubmitting}
               >
                 Change Phone Number
               </button>
