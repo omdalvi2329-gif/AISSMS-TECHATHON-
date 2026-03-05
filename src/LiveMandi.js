@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, MapPin, TrendingUp, TrendingDown, Minus, Info } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, MapPin, TrendingUp, TrendingDown, Minus, Info, ArrowUpRight, ArrowDownRight, ArrowLeft } from 'lucide-react';
 import { MARKET_DATA, MANDIS } from './mandiData';
 import './LiveMandi.css';
 
-const LiveMandi = () => {
+const LiveMandi = ({ onBack }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMandi, setSelectedMandi] = useState('Lasalgaon');
   const [loading, setLoading] = useState(true);
@@ -45,12 +46,31 @@ const LiveMandi = () => {
 
   return (
     <div className="live-mandi-container">
-      <header className="mandi-header">
-        <h1>Live Mandi Prices</h1>
+      <motion.button
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        whileHover={{ scale: 1.1, x: -5 }}
+        whileTap={{ scale: 0.9 }}
+        onClick={onBack}
+        className="mandi-back-btn"
+      >
+        <ArrowLeft size={24} />
+      </motion.button>
+
+      <motion.header 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mandi-header"
+      >
+        <h1 className="premium-text-gradient">Live Mandi Prices</h1>
         <p>Real-time agricultural commodity rates across India</p>
         
         <div className="search-wrapper">
-          <div className="search-bar">
+          <motion.div 
+            className="search-bar"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
             <Search className="search-icon" size={20} />
             <input 
               type="text" 
@@ -58,43 +78,60 @@ const LiveMandi = () => {
               value={searchTerm}
               onChange={handleSearchChange}
             />
-          </div>
+          </motion.div>
           
-          {searchTerm && filteredMandis.length > 0 && (
-            <div className="search-results">
-              {filteredMandis.map(mandi => (
-                <div 
-                  key={mandi.id} 
-                  className="search-item"
-                  onClick={() => handleMandiSelect(mandi.name)}
-                >
-                  <MapPin size={14} />
-                  <span>{mandi.name}, {mandi.state}</span>
-                </div>
-              ))}
-            </div>
-          )}
+          <AnimatePresence>
+            {searchTerm && filteredMandis.length > 0 && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="search-results"
+              >
+                {filteredMandis.map(mandi => (
+                  <div 
+                    key={mandi.id} 
+                    className="search-item"
+                    onClick={() => handleMandiSelect(mandi.name)}
+                  >
+                    <MapPin size={14} />
+                    <span>{mandi.name}, {mandi.state}</span>
+                  </div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      </header>
+      </motion.header>
 
-      <div className="current-selection-info">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="current-selection-info"
+      >
         <MapPin size={18} className="text-green" />
         <span>Showing prices for: <strong>{selectedMandi}</strong></span>
-      </div>
+      </motion.div>
 
       <div className="price-grid">
         {loading ? (
           // Skeleton Loading
           Array(8).fill(0).map((_, i) => (
-            <div key={i} className="price-card skeleton">
+            <div key={i} className="price-card skeleton" style={{ minHeight: '200px' }}>
               <div className="skeleton-title"></div>
               <div className="skeleton-price"></div>
               <div className="skeleton-footer"></div>
             </div>
           ))
         ) : currentPrices.length > 0 ? (
-          currentPrices.map((item) => (
-            <div key={item.id} className="price-card">
+          currentPrices.map((item, idx) => (
+            <motion.div 
+              key={item.id} 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.05 }}
+              className="price-card"
+            >
               <div className="card-header">
                 <h3>{item.product}</h3>
                 <TrendIcon trend={item.trend} />
@@ -123,7 +160,7 @@ const LiveMandi = () => {
                   {item.trendPercentage} {item.trend !== 'stable' && (item.trend === 'up' ? 'Increase' : 'Decrease')}
                 </span>
               </div>
-            </div>
+            </motion.div>
           ))
         ) : (
           <div className="empty-state">

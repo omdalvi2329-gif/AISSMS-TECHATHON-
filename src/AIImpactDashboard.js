@@ -2,36 +2,28 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { 
   ArrowLeft, 
   TrendingUp, 
+  TrendingDown,
   Droplets, 
   Sprout, 
   BarChart3, 
   AlertTriangle, 
-  Globe, 
   Zap,
   Info,
   ArrowUpRight,
   ShieldCheck,
-  TrendingDown,
-  ArrowRight,
   Activity,
   Bug,
   CloudRain,
   BarChart,
-  Users,
   CheckCircle2,
   DollarSign,
-  Quote,
   Cpu,
   RefreshCw,
-  Leaf,
-  Droplet,
   Download,
-  X,
   FileText,
-  ChevronRight,
   Sparkles
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import './AIImpactDashboard.css';
 
@@ -65,47 +57,11 @@ const CountUp = ({ end, prefix = '', suffix = '', decimals = 0 }) => {
   );
 };
 
-const Modal = ({ isOpen, onClose, title, children }) => (
-  <AnimatePresence>
-    {isOpen && (
-      <>
-        <motion.div 
-          className="modal-overlay"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-        />
-        <motion.div 
-          className="modal-content"
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        >
-          <div className="modal-header">
-            <h3>{title}</h3>
-            <button onClick={onClose} className="close-btn"><X size={20} /></button>
-          </div>
-          <div className="modal-body">
-            {children}
-          </div>
-        </motion.div>
-      </>
-    )}
-  </AnimatePresence>
-);
-
-const AIImpactDashboard = ({ onBack, t, farmerName, locationData }) => {
-  const [isLoaded, setIsLoaded] = useState(false);
+const AIImpactDashboard = ({ onBack, onNavigateToOptimize, t, farmerName, locationData }) => {
   const [rainModifier, setRainModifier] = useState(0);
   const [priceModifier, setPriceModifier] = useState(0);
-  const [showOptimizeModal, setShowOptimizeModal] = useState(false);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [isDetailedView, setIsDetailedView] = useState(false);
-
-  useEffect(() => {
-    setIsLoaded(true);
-  }, []);
 
   // Realistic Calculation Logic
   const farmSize = parseFloat(locationData?.farmSize || 3);
@@ -119,9 +75,6 @@ const AIImpactDashboard = ({ onBack, t, farmerName, locationData }) => {
     // Let's assume -30% to +30% range. -30% rain = -15% yield, +30% rain = -5% yield (too much rain)
     const yieldImpact = rainModifier < 0 ? rainModifier * 0.5 : -rainModifier * 0.2;
     const currentYield = historicalYield + yieldImpact + 18; // 18 is the base AI gain
-    
-    const basePrice = 5800;
-    const currentPrice = basePrice * (1 + priceModifier / 100);
     
     const historicalIncome = farmSize * 52000;
     const currentIncome = farmSize * (baseIncomePerAcre * (currentYield / 100)) * (1 + priceModifier / 100);
@@ -770,9 +723,9 @@ const AIImpactDashboard = ({ onBack, t, farmerName, locationData }) => {
             </div>
 
             <div className="opportunity-footer mt-8">
-              <motion.button 
+                <motion.button 
                 className="premium-action-btn primary" 
-                onClick={() => setShowOptimizeModal(true)}
+                onClick={onNavigateToOptimize}
                 whileHover={{ scale: 1.05, boxShadow: "0 0 25px rgba(34, 197, 94, 0.4)" }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -874,7 +827,7 @@ const AIImpactDashboard = ({ onBack, t, farmerName, locationData }) => {
                 </motion.button>
                 <motion.button 
                   className="premium-action-btn primary" 
-                  onClick={() => setShowOptimizeModal(true)}
+                  onClick={onNavigateToOptimize}
                   whileHover={{ scale: 1.05, boxShadow: "0 0 25px rgba(34, 197, 94, 0.4)" }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -885,51 +838,6 @@ const AIImpactDashboard = ({ onBack, t, farmerName, locationData }) => {
           </motion.div>
         </section>
       </main>
-
-      <Modal 
-        isOpen={showOptimizeModal} 
-        onClose={() => setShowOptimizeModal(false)}
-        title="AI Farm Optimization Plan"
-      >
-        <div className="optimization-steps">
-          <div className="opt-step">
-            <div className="step-num">1</div>
-            <div className="step-content">
-              <h4>Irrigation Calibration</h4>
-              <p>Adjust water flow to {Math.round(100 - simulationResults.waterSavings)}% based on current {rainModifier}% rainfall deviation.</p>
-            </div>
-          </div>
-          <div className="opt-step">
-            <div className="step-num">2</div>
-            <div className="step-content">
-              <h4>Nutrient Timing</h4>
-              <p>Apply Nitrogen-rich fertilizers in the next 48 hours for maximum absorption before predicted light rain.</p>
-            </div>
-          </div>
-          <div className="opt-step">
-            <div className="step-num">3</div>
-            <div className="step-content">
-              <h4>Pest Alert</h4>
-              <p>Increased humidity detected. Spray organic neem oil to prevent aphid infestation.</p>
-            </div>
-          </div>
-          <div className="opt-step">
-            <div className="step-num">4</div>
-            <div className="step-content">
-              <h4>Market Timing</h4>
-              <p>Mandi prices are peaking. Schedule harvest for Day 25 to capture +{priceModifier}% price surge.</p>
-            </div>
-          </div>
-          <div className="opt-step">
-            <div className="step-num">5</div>
-            <div className="step-content">
-              <h4>Cost Reduction</h4>
-              <p>AI suggests reducing labor hours by 10% by automating irrigation triggers.</p>
-            </div>
-          </div>
-          <button className="apply-plan-btn" onClick={() => setShowOptimizeModal(false)}>Apply All Recommendations</button>
-        </div>
-      </Modal>
     </div>
   );
 };

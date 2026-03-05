@@ -20,13 +20,15 @@ import {
   ArrowUpRight,
   Play,
   Award,
-  BarChart3
+  BarChart3,
+  Loader2,
+  ShieldCheck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { languages } from './translations';
 import './Dashboard.css';
 
-const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNavigateToGlobalMarket, onNavigateToCommunity, onNavigateToAIChat, onNavigateToSeasonalAdvice, onNavigateToSettings, onNavigateToProfile, onNavigateToImpact, onNavigateToMarketReport, farmerName, currentLanguage, onLanguageChange, t }) => {
+const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNavigateToGlobalMarket, onNavigateToCommunity, onNavigateToAIChat, onNavigateToSeasonalAdvice, onNavigateToSettings, onNavigateToProfile, onNavigateToImpact, onNavigateToInsurance, onNavigateToMarketReport, globalMarketLoading, farmerName, currentLanguage, onLanguageChange, t }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [suggestionIndex, setSuggestionIndex] = useState(0);
@@ -74,7 +76,8 @@ const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNaviga
       description: "Export & bade buyers se judo",
       icon: <Globe className="card-icon globe-icon" />,
       color: "#8b5cf6",
-      onClick: onNavigateToGlobalMarket
+      onClick: onNavigateToGlobalMarket,
+      isLoading: !!globalMarketLoading
     },
     {
       id: 4,
@@ -92,6 +95,15 @@ const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNaviga
       color: "#22c55e",
       onClick: onNavigateToImpact,
       isPremium: true
+    },
+    {
+      id: 8,
+      title: "Smart Loss Protection",
+      description: "AI-based parametric insurance",
+      icon: <ShieldCheck className="card-icon" />,
+      color: "#14532d",
+      onClick: onNavigateToInsurance,
+      isNew: true
     },
     {
       id: 6,
@@ -221,6 +233,11 @@ const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNaviga
                     <span>AI Impact Dashboard</span>
                     <span className="premium-tag-mini">PREMIUM</span>
                   </button>
+                  <button className="nav-item-modern" onClick={() => { onNavigateToInsurance(); setIsSidebarOpen(false); }}>
+                    <ShieldCheck size={20} className="nav-icon-modern" />
+                    <span>Smart Loss Protection</span>
+                    <span className="new-tag-mini">NEW</span>
+                  </button>
                   <button className="nav-item-modern" onClick={() => { onNavigateToProfile(); setIsSidebarOpen(false); }}>
                     <User size={20} className="nav-icon-modern" />
                     <span>Farmer Profile</span>
@@ -333,14 +350,18 @@ const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNaviga
               <motion.div
                 key={card.id}
                 className="feature-card"
-                onClick={card.onClick}
+                onClick={card.isLoading ? undefined : card.onClick}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 * (index + 1), duration: 0.5 }}
                 whileHover={{ 
-                  y: -8, 
+                  y: -8,
                   scale: 1.02,
                   boxShadow: "0 20px 40px rgba(34, 197, 94, 0.15)" 
+                }}
+                style={{
+                  cursor: card.isLoading ? 'not-allowed' : 'pointer',
+                  opacity: card.isLoading ? 0.75 : 1
                 }}
               >
                 <div className="card-inner">
@@ -354,7 +375,11 @@ const Dashboard = ({ onLogout, onNavigateToWeather, onNavigateToMarket, onNaviga
                     <h3>{card.title}</h3>
                     <p>{card.description}</p>
                   </div>
-                  <ChevronRight className="card-arrow" size={20} />
+                  {card.isLoading ? (
+                    <Loader2 className="card-arrow" size={20} style={{ animation: 'spin 1s linear infinite' }} />
+                  ) : (
+                    <ChevronRight className="card-arrow" size={20} />
+                  )}
                 </div>
                 <div className="card-glow" style={{ background: `radial-gradient(circle at center, ${card.color}22, transparent 70%)` }}></div>
               </motion.div>

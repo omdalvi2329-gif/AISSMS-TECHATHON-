@@ -18,18 +18,24 @@ const FarmerProfileInner = ({ onBack, t }) => {
   const [dbProfile, setDbProfile] = useState(null);
 
   useEffect(() => {
+    let isMounted = true;
     const fetchProfile = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data, error } = await supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
-        if (data) setDbProfile(data);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user && isMounted) {
+          const { data, error } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('user_id', user.id)
+            .single();
+          if (data && isMounted) setDbProfile(data);
+        }
+      } catch (err) {
+        if (isMounted) console.error("Error fetching profile:", err);
       }
     };
     fetchProfile();
+    return () => { isMounted = false; };
   }, []);
 
   useEffect(() => {
@@ -82,17 +88,25 @@ const FarmerProfileInner = ({ onBack, t }) => {
     if (nextState !== null) updates.state = nextState;
 
     if (Object.keys(updates).length > 0) {
-      const { data: { user } } = await supabase.auth.getUser();
-      const { error } = await supabase
-        .from('user_profiles')
-        .update(updates)
-        .eq('user_id', user.id);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error("User not found");
+        const { error } = await supabase
+          .from('user_profiles')
+          .update(updates)
+          .eq('user_id', user.id);
 
-      if (!error) {
-        setDbProfile(prev => ({ ...prev, ...updates }));
-        if (updates.full_name) actions.patchPersonalInfo({ fullName: updates.full_name });
-        if (updates.village) actions.patchLocation({ village: updates.village });
-        if (updates.state) actions.patchLocation({ state: updates.state });
+        if (!error) {
+          setDbProfile(prev => ({ ...prev, ...updates }));
+          if (updates.full_name) actions.patchPersonalInfo({ fullName: updates.full_name });
+          if (updates.village) actions.patchLocation({ village: updates.village });
+          if (updates.state) actions.patchLocation({ state: updates.state });
+        } else {
+          throw error;
+        }
+      } catch (error) {
+        console.error("Error updating profile:", error.message);
+        alert("Failed to update profile: " + error.message);
       }
     }
 

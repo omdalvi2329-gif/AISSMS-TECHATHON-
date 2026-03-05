@@ -316,7 +316,9 @@ export const useWeather = ({ apiKey, currentLanguage }) => {
 
       // Save to Supabase
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError) throw authError;
+        
         if (user) {
           await supabase.from('weather_queries').insert([{
             user_id: user.id,
@@ -327,7 +329,7 @@ export const useWeather = ({ apiKey, currentLanguage }) => {
           }]);
         }
       } catch (dbErr) {
-        console.error('Error saving weather query:', dbErr);
+        console.warn('Weather query save skipped (Auth/DB error):', dbErr.message);
       }
 
       setState({

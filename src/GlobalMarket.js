@@ -16,7 +16,10 @@ import {
   ShieldCheck,
   Sprout,
   Handshake,
-  Loader2
+  Loader2,
+  Globe2,
+  Trash2,
+  ExternalLink
 } from 'lucide-react';
 import { 
   XAxis, 
@@ -29,7 +32,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import './GlobalMarket.css';
 
-const GlobalMarketHome = ({ t }) => {
+const GlobalMarketHome = ({ t, setGlobalRequests, setShowRequestDropdown }) => {
   const [selectedCrop, setSelectedCrop] = useState("Organic Turmeric");
   const [farmSize, setFarmSize] = useState(5);
   const [location, setLocation] = useState("Maharashtra, India");
@@ -339,6 +342,22 @@ const GlobalMarketHome = ({ t }) => {
   const handleBuyerRequest = (buyer) => {
     setSelectedBuyer(buyer);
     setShowBuyerModal(true);
+    
+    // Create request object for Global Request Viewer
+    const newRequest = {
+      id: Date.now(),
+      cropName: selectedCrop,
+      country: buyer.country,
+      exportPrice: currentData.exportPrice,
+      logisticsCost: currentData.logisticsCost,
+      demandScore: currentData.demandScore,
+      timestamp: new Date().toLocaleString(),
+      status: "Pending"
+    };
+    
+    setGlobalRequests(prev => [newRequest, ...prev]);
+    // Show dropdown automatically to give feedback
+    setShowRequestDropdown(true);
   };
 
   const handleDownloadReport = () => {
@@ -351,7 +370,10 @@ const GlobalMarketHome = ({ t }) => {
     
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
+      if (!user) {
+        alert("Please login to submit requests");
+        return;
+      }
 
       const { error } = await supabase.from('market_requests').insert([{
         user_id: user.id,
@@ -371,7 +393,8 @@ const GlobalMarketHome = ({ t }) => {
         setSelectedBuyer(null);
       }, 2000);
     } catch (err) {
-      alert("Error submitting request: " + err.message);
+      console.error("Error submitting request:", err);
+      alert("Error submitting request: " + (err.message || "Failed to fetch"));
     } finally {
       setIsSubmitting(false);
     }
@@ -863,6 +886,7 @@ const GlobalMarketPosts = ({ t }) => {
     let isMounted = true;
     const fetchInterests = async () => {
       try {
+        if (typeof navigator !== 'undefined' && !navigator.onLine) return;
         const { data: { user } } = await supabase.auth.getUser();
         if (user && isMounted) {
           const { data } = await supabase
@@ -894,15 +918,20 @@ const GlobalMarketPosts = ({ t }) => {
 
       if (!user) return; // Stop here if guest, but UI is already updated
 
-      // Attempt to save to database, but don't block UI if it fails (since these are mock posts)
-      const { error } = await supabase.from('post_interest').insert([{
-        user_id: user.id,
-        post_id: postId
-      }]);
+      if (typeof navigator !== 'undefined' && !navigator.onLine) return;
 
-      if (error && error.code !== '23505') {
-        console.error("Database sync error (non-critical):", error);
-      }
+      // Attempt to save to database, but don't block UI if it fails (since these are mock posts)
+      const { error } = await supabase
+        .from('post_interest')
+        .upsert(
+          [{
+            user_id: user.id,
+            post_id: postId
+          }],
+          { onConflict: 'user_id,post_id' }
+        );
+
+      if (error) console.error("Database sync error (non-critical):", error);
     } catch (err) {
       console.error("Interest interaction error:", err);
     }
@@ -1078,8 +1107,16 @@ const GlobalMarketNotifications = ({ t }) => {
   );
 };
 
-const GlobalMarket = ({ onBack, t, currentLanguage, farmerName, locationData }) => {
-  const [activeTab, setActiveTab] = useState('home');
+const GlobalMarket = ({ onBack, t, currentLanguage, farmerName, locationData, globalMarketData }) => {
+  const [globalRequests, setGlobalRequests] = useState([]);
+  const [showRequestDropdown, setShowRequestDropdown] = useState(false);
+  const [activeTab, setActiveTab] = useState(() => {
+    try {
+      return sessionStorage.getItem('agriSetuGlobalMarketTab') || 'home';
+    } catch (e) {
+      return 'home';
+    }
+  });
 
   const handleBack = () => {
     if (onBack) {
@@ -1089,14 +1126,26 @@ const GlobalMarket = ({ onBack, t, currentLanguage, farmerName, locationData }) 
     }
   };
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'home': return <GlobalMarketHome t={t} />;
-      case 'posts': return <GlobalMarketPosts t={t} />;
-      case 'notifications': return <GlobalMarketNotifications t={t} />;
-      default: return <GlobalMarketHome t={t} />;
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('agriSetuGlobalMarketTab', activeTab);
+    } catch (e) {
+      // ignore
     }
-  };
+  }, [activeTab]);
+
+  const renderContent = useMemo(() => {
+    switch (activeTab) {
+      case 'home':
+        return <GlobalMarketHome t={t} globalMarketData={globalMarketData} setGlobalRequests={setGlobalRequests} setShowRequestDropdown={setShowRequestDropdown} />;
+      case 'posts':
+        return <GlobalMarketPosts t={t} />;
+      case 'notifications':
+        return <GlobalMarketNotifications t={t} />;
+      default:
+        return <GlobalMarketHome t={t} globalMarketData={globalMarketData} setGlobalRequests={setGlobalRequests} setShowRequestDropdown={setShowRequestDropdown} />;
+    }
+  }, [activeTab, t, globalMarketData]);
 
   return (
     <div className="global-market-page dark-theme">
@@ -1111,6 +1160,146 @@ const GlobalMarket = ({ onBack, t, currentLanguage, farmerName, locationData }) 
             <MessageSquare size={18} />
             <span>Posts</span>
           </button>
+
+          {/* Global Request Viewer Navbar Section */}
+          <div className="relative flex flex-col items-center">
+            <button 
+              className={`nav-tab-pill relative ${showRequestDropdown ? 'active' : ''}`} 
+              onClick={() => setShowRequestDropdown(!showRequestDropdown)}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}
+            >
+              <div className="icon-badge-wrapper relative">
+                <Globe2 size={18} />
+                {globalRequests.length > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-600 text-white text-[10px] font-bold px-1 rounded-full min-w-[16px] h-[16px] flex items-center justify-center border-2 border-[#141414]">
+                    {globalRequests.length}
+                  </span>
+                )}
+              </div>
+              <span>Global Request Viewer</span>
+            </button>
+
+            {/* Dropdown Panel - Premium Agri-Tech UI */}
+            <AnimatePresence>
+              {showRequestDropdown && (
+                <>
+                  <div className="fixed inset-0 z-[90]" onClick={() => setShowRequestDropdown(false)} />
+                  <motion.div
+                    initial={{ opacity: 0, y: 15, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 15, scale: 0.95 }}
+                    transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                    className="absolute top-full mt-3 left-1/2 -translate-x-1/2 w-85 overflow-hidden bg-[#0d1117]/95 backdrop-blur-2xl border border-white/10 rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.6)] z-[100] flex flex-col cursor-default"
+                    style={{ minWidth: '340px' }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {/* Header */}
+                    <div className="px-5 py-4 border-b border-white/5 flex justify-between items-center bg-gradient-to-r from-green-500/10 to-transparent">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 bg-green-500/20 rounded-lg">
+                          <Globe2 size={16} className="text-green-500" />
+                        </div>
+                        <h3 className="text-xs font-bold text-white uppercase tracking-widest m-0">Live Market Requests</h3>
+                      </div>
+                      <button 
+                        onClick={() => {
+                          if(window.confirm("Clear all active requests?")) setGlobalRequests([]);
+                        }}
+                        className="text-[10px] font-bold text-gray-500 hover:text-red-400 transition-colors flex items-center gap-1 bg-white/5 px-2 py-1 rounded-md border-none cursor-pointer"
+                      >
+                        <Trash2 size={12} /> Clear
+                      </button>
+                    </div>
+
+                    {/* Content Area */}
+                    <div className="overflow-y-auto max-h-[400px] p-4 custom-scrollbar flex-1">
+                      {globalRequests.length === 0 ? (
+                        <div className="py-12 flex flex-col items-center justify-center text-center">
+                          <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4 border border-white/5">
+                            <Globe size={28} className="text-gray-700 animate-pulse" />
+                          </div>
+                          <p className="text-gray-300 text-sm font-semibold m-0">No Global Market Requests Yet</p>
+                          <p className="text-gray-500 text-[11px] mt-2 max-w-[200px] mx-auto leading-relaxed">Your export connection requests will appear here for tracking.</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {globalRequests.map((req) => (
+                            <motion.div 
+                              layout
+                              key={req.id} 
+                              initial={{ x: -10, opacity: 0 }}
+                              animate={{ x: 0, opacity: 1 }}
+                              className="bg-white/5 border border-white/5 rounded-2xl p-4 hover:bg-white/10 hover:border-white/10 transition-all group relative overflow-hidden"
+                            >
+                              <div className="absolute top-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button 
+                                  onClick={() => setGlobalRequests(prev => prev.filter(r => r.id !== req.id))}
+                                  className="p-1.5 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white rounded-lg transition-all border-none cursor-pointer"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+
+                              <div className="flex items-center gap-3 mb-3">
+                                <div className="p-2 bg-green-500/10 rounded-xl">
+                                  <Sprout size={18} className="text-green-500" />
+                                </div>
+                                <div className="flex-1">
+                                  <div className="flex justify-between items-center pr-8">
+                                    <span className="font-bold text-white text-[15px]">{req.cropName}</span>
+                                  </div>
+                                  <div className="flex items-center gap-1.5 mt-0.5">
+                                    <span className="bg-yellow-500/20 text-yellow-500 text-[9px] px-2 py-0.5 rounded-full font-black uppercase tracking-tighter border border-yellow-500/20">
+                                      {req.status}
+                                    </span>
+                                    <span className="text-[10px] text-gray-500 italic">• {req.timestamp.split(',')[1]}</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-3 bg-black/20 rounded-xl p-3 border border-white/5">
+                                <div className="flex flex-col gap-1">
+                                  <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Destination</span>
+                                  <div className="flex items-center gap-1.5">
+                                    <Globe size={11} className="text-blue-500" />
+                                    <span className="text-xs text-white font-medium">{req.country}</span>
+                                  </div>
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                  <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Export Price</span>
+                                  <div className="flex items-center gap-1.5">
+                                    <TrendingUp size={11} className="text-green-500" />
+                                    <span className="text-xs text-green-400 font-bold">₹{req.exportPrice}/kg</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="mt-4 flex gap-2">
+                                <button className="flex-1 bg-green-600/10 hover:bg-green-600 text-green-500 hover:text-white text-[11px] py-2.5 rounded-xl transition-all font-bold border border-green-500/20 cursor-pointer">
+                                  Track Details
+                                </button>
+                                <button className="px-3 bg-white/5 hover:bg-white/10 text-gray-400 rounded-xl transition-all border border-white/5 cursor-pointer">
+                                  <ExternalLink size={14} />
+                                </button>
+                              </div>
+                            </motion.div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Footer / CTA */}
+                    {globalRequests.length > 0 && (
+                      <div className="p-4 bg-white/5 border-t border-white/5">
+                        <p className="text-[10px] text-center text-gray-500 m-0">Our trade specialists verify requests within 24 hours.</p>
+                      </div>
+                    )}
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
+
           <button className={`nav-tab-pill ${activeTab === 'notifications' ? 'active' : ''}`} onClick={() => setActiveTab('notifications')}>
             <div className="icon-badge-wrapper">
               <Bell size={18} />
@@ -1135,7 +1324,7 @@ const GlobalMarket = ({ onBack, t, currentLanguage, farmerName, locationData }) 
           </motion.button>
         </div>
         <AnimatePresence mode="wait">
-          {renderContent()}
+          {renderContent}
         </AnimatePresence>
       </main>
     </div>

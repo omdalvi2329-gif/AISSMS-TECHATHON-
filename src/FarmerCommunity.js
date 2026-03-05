@@ -219,6 +219,7 @@ const FarmerCommunity = ({ onBack, farmerName }) => {
   const [activeTab, setActiveTab] = useState('feed'); 
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isOnline, setIsOnline] = useState(() => (typeof navigator !== 'undefined' ? navigator.onLine : true));
   const [newPostText, setNewPostText] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [showEncourageSheet, setShowEncourageSheet] = useState(false);
@@ -229,13 +230,18 @@ const FarmerCommunity = ({ onBack, farmerName }) => {
   const [commentText, setCommentText] = useState('');
 
   const fetchPosts = async () => {
+    let isMounted = true;
     try {
       setLoading(true);
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        setPosts(INITIAL_MOCK_POSTS);
+        return;
+      }
+
       const { data: postsData, error: postsError } = await supabase
         .from('posts')
         .select(`
           *,
-          user_profiles!inner (full_name, village),
           likes (user_id),
           comments (id, comment_text, user_id, created_at),
           shares (user_id)
@@ -243,13 +249,30 @@ const FarmerCommunity = ({ onBack, farmerName }) => {
         .order('created_at', { ascending: false });
 
       if (postsError) throw postsError;
+      if (!isMounted) return;
+
+      const userIds = Array.from(new Set((postsData || []).map(p => p.user_id).filter(Boolean)));
+      const profileByUserId = {};
+
+      if (userIds.length > 0) {
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('user_profiles')
+          .select('user_id, full_name, village')
+          .in('user_id', userIds);
+
+        if (!profilesError && Array.isArray(profilesData)) {
+          profilesData.forEach(p => {
+            if (p?.user_id) profileByUserId[p.user_id] = p;
+          });
+        }
+      }
 
       const { data: { user } } = await supabase.auth.getUser();
       
       const formattedPosts = postsData.map(post => ({
         id: post.id,
-        name: post.user_profiles?.full_name || 'Unknown Farmer',
-        location: post.user_profiles?.village || 'Unknown',
+        name: profileByUserId[post.user_id]?.full_name || 'Unknown Farmer',
+        location: profileByUserId[post.user_id]?.village || 'Unknown',
         activity: 'Update', 
         crop: 'General', 
         text: post.content,
@@ -274,8 +297,24 @@ const FarmerCommunity = ({ onBack, farmerName }) => {
   };
 
   useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  useEffect(() => {
     fetchPosts();
-    
+
+    if (!isOnline) {
+      return;
+    }
+
     const channel = supabase
       .channel('public:posts_realtime')
       .on('postgres_changes', { event: '*', table: 'posts' }, fetchPosts)
@@ -287,7 +326,7 @@ const FarmerCommunity = ({ onBack, farmerName }) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [isOnline]);
 
   const handlePostSubmit = async (e) => {
     if (e) e.preventDefault();
@@ -443,12 +482,28 @@ const FarmerCommunity = ({ onBack, farmerName }) => {
           </div>
         </div>
         
-        <div className="header-tabs">
-          <button className={`tab-btn ${activeTab === 'feed' ? 'active' : ''}`} onClick={() => setActiveTab('feed')}>
+        <div className="header-tabs" style={{ position: 'relative', zIndex: 10001, pointerEvents: 'auto' }}>
+          <button 
+            type="button"
+            className={`tab-btn ${activeTab === 'feed' ? 'active' : ''}`} 
+            onClick={() => {
+              console.log('Switching to feed');
+              setActiveTab('feed');
+            }}
+            style={{ position: 'relative', zIndex: 10002, pointerEvents: 'auto', cursor: 'pointer' }}
+          >
             <MessageSquare size={18} />
             <span>Updates Feed</span>
           </button>
-          <button className={`tab-btn ${activeTab === 'rankings' ? 'active' : ''}`} onClick={() => setActiveTab('rankings')}>
+          <button 
+            type="button"
+            className={`tab-btn ${activeTab === 'rankings' ? 'active' : ''}`} 
+            onClick={() => {
+              console.log('Switching to rankings');
+              setActiveTab('rankings');
+            }}
+            style={{ position: 'relative', zIndex: 10002, pointerEvents: 'auto', cursor: 'pointer' }}
+          >
             <Trophy size={18} />
             <span>AI Rankings</span>
           </button>
