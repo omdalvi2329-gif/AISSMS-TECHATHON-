@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, lazy, Suspense, useCallback } from 
 import { Play, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from './supabaseClient';
-import { translations } from './translations';
+import { translations, languages } from './translations';
 import Dashboard from './Dashboard';
 import WeatherDashboard from './weather/WeatherDashboard';
 import AIChatPage from './AIChatPage';
@@ -37,6 +37,7 @@ function App() {
   const [globalMarketData, setGlobalMarketData] = useState(null);
   const [toast, setToast] = useState(null);
   const [errors, setErrors] = useState({});
+  const [showVideoModal, setShowVideoModal] = useState(false);
 
   const toastTimerRef = useRef(null);
 
@@ -45,8 +46,6 @@ function App() {
     setToast({ message, type });
     toastTimerRef.current = setTimeout(() => setToast(null), 2800);
   }, []);
-
-  const [showVideoModal, setShowVideoModal] = useState(false);
 
   const t = translations[currentLanguage];
 
@@ -83,6 +82,7 @@ function App() {
           if (!profile || !profile.state || !profile.village) {
             setCurrentPage('onboarding');
           } else {
+            setCurrentPage('dashboard');
             setAuthLoading(false);
           }
         } else {
@@ -121,11 +121,11 @@ function App() {
       isMounted = false;
       if (subscription) subscription.unsubscribe();
     };
-  }, [fetchUserProfile]);
+  }, [fetchUserProfile, showToast]);
 
   // 2. Sync Routes from Hash (only when logged in and profile is ready)
   useEffect(() => {
-    if (!isLoggedIn || currentPage === 'onboarding' || currentPage === 'loading') return;
+    if (!isLoggedIn || currentPage === 'onboarding' || currentPage === 'loading' || currentPage === 'login') return;
 
     const sync = () => {
       const hash = window.location.hash || '';
@@ -194,9 +194,20 @@ function App() {
     }
   };
 
-  if (authLoading && currentPage === 'loading') return <div className="loading-screen">Loading...</div>;
+  const handleLanguageChange = (lang) => {
+    setCurrentLanguage(lang);
+    localStorage.setItem('agriSetuLang', lang);
+  };
 
-  if (!isLoggedIn) {
+  if (authLoading && currentPage === 'loading') {
+    return (
+      <div className="loading-screen" style={{ backgroundColor: '#0a0e0a', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="spinner" style={{ border: '4px solid rgba(34, 197, 94, 0.1)', borderTop: '4px solid #22c55e', borderRadius: '50%', width: '40px', height: '40px', animation: 'spin 1s linear infinite' }}></div>
+      </div>
+    );
+  }
+
+  if (!isLoggedIn && currentPage === 'login') {
     return (
       <div className="app-container">
         <header className="header">
@@ -207,13 +218,17 @@ function App() {
           >
             <Play size={20} fill="currentColor" />
           </button>
-          <button className="language-selector" onClick={() => {
-            const nextLang = currentLanguage === 'en' ? 'hi' : 'en';
-            setCurrentLanguage(nextLang);
-            localStorage.setItem('agriSetuLang', nextLang);
-          }}>
-            {currentLanguage === 'en' ? 'हिंदी' : 'English'}
-          </button>
+          <select
+            className="language-selector"
+            value={currentLanguage}
+            onChange={(e) => handleLanguageChange(e.target.value)}
+          >
+            {languages.map(lang => (
+              <option key={lang.code} value={lang.code}>
+                {lang.name}
+              </option>
+            ))}
+          </select>
         </header>
 
         <AnimatePresence>
@@ -256,11 +271,7 @@ function App() {
         <div className="login-container">
           <div className="login-card slide-up">
             <h1 className="login-title">AgriSetu</h1>
-            <p className="login-subtitle">
-              {currentLanguage === 'hi' 
-                ? "नमस्ते! 👨‍🌾 मैं कृषि-सेतु AI हूँ, आपका स्मार्ट खेती साथी। मैं आपकी कैसे मदद कर सकता हूँ?"
-                : "Namaste! 👨‍🌾 I am AgriSetu AI, your smart farming companion. How can I help you today?"}
-            </p>
+            <p className="login-subtitle">{t.subtitle}</p>
             
             {!showOtpInput ? (
               <form className="login-form" onSubmit={async (e) => {
@@ -288,25 +299,32 @@ function App() {
                 }
               }}>
                 <div className="form-group">
-                  <label className="form-label">Full Name</label>
+                  <label className="form-label">{t.fullName}</label>
                   <input 
-                    className={`form-input ${errors.submit ? 'error' : ''}`}
+                    className={`form-input ${errors.submit || errors.fullName ? 'error' : ''}`}
                     name="fullName" 
                     value={formData.fullName} 
                     onChange={(e) => setFormData({...formData, fullName: e.target.value})} 
-                    placeholder="Enter your name" 
+                    placeholder={t.fullName} 
                   />
+                  {errors.fullName && <span className="error-message">{errors.fullName}</span>}
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Mobile Number</label>
-                  <input 
-                    className={`form-input ${errors.submit ? 'error' : ''}`}
-                    name="mobileNumber" 
-                    type="tel"
-                    value={formData.mobileNumber} 
-                    onChange={(e) => setFormData({...formData, mobileNumber: e.target.value})} 
-                    placeholder="10-digit mobile number" 
-                  />
+                  <label className="form-label">{t.mobileNumber}</label>
+                  <div style={{ position: 'relative' }}>
+                    <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }}>+91</span>
+                    <input 
+                      className={`form-input ${errors.submit || errors.mobileNumber ? 'error' : ''}`}
+                      name="mobileNumber" 
+                      type="tel"
+                      value={formData.mobileNumber} 
+                      onChange={(e) => setFormData({...formData, mobileNumber: e.target.value})} 
+                      placeholder={t.mobileNumber}
+                      style={{ paddingLeft: '45px' }}
+                      maxLength="10"
+                    />
+                  </div>
+                  {errors.mobileNumber && <span className="error-message">{errors.mobileNumber}</span>}
                 </div>
                 
                 <div className="checkbox-group">
@@ -318,9 +336,10 @@ function App() {
                     id="terms"
                   />
                   <label htmlFor="terms" className="checkbox-label">
-                    I agree to the Terms of Service and Privacy Policy
+                    {t.termsAndConditions}
                   </label>
                 </div>
+                {errors.terms && <span className="error-message">{errors.terms}</span>}
 
                 {errors.submit && <span className="error-message">{errors.submit}</span>}
                 
@@ -362,7 +381,7 @@ function App() {
                   <input 
                     className="form-input otp-single-input"
                     value={otp} 
-                    onChange={(e) => setOtp(e.target.value)} 
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))} 
                     placeholder="••••••" 
                     maxLength={6}
                   />
@@ -401,7 +420,7 @@ function App() {
       case 'community': return <FarmerCommunity {...props} />;
       case 'ai-chat': return <AIChatPage {...props} />;
       case 'seasonal-advice': return <SeasonalAdvice {...props} locationData={onboardingData} />;
-      case 'settings': return <Settings {...props} onLanguageChange={(l) => { setCurrentLanguage(l); localStorage.setItem('agriSetuLang', l); }} />;
+      case 'settings': return <Settings {...props} onLanguageChange={(l) => handleLanguageChange(l)} />;
       case 'farmer-profile': return <FarmerProfile {...props} locationData={onboardingData} />;
       case 'ai-impact': return <AIImpactDashboard {...props} onNavigateToOptimize={() => navigate('optimize-plan', '#/optimize-plan')} />;
       case 'optimize-plan': return <OptimizePlanPage onBack={() => navigate('ai-impact', '#/ai-impact')} locationData={onboardingData} />;
@@ -424,7 +443,7 @@ function App() {
             onNavigateToInsurance={() => navigate('insurance', '#/insurance')}
             onNavigateToMarketReport={() => navigate('market-report', '#/market-report')}
             currentLanguage={currentLanguage}
-            onLanguageChange={(l) => { setCurrentLanguage(l); localStorage.setItem('agriSetuLang', l); }}
+            onLanguageChange={(l) => handleLanguageChange(l)}
           />
         );
     }
@@ -432,15 +451,14 @@ function App() {
 
   return (
     <div className="app-container">
-      {toast?.message && (
-        <div className={`toast toast-${toast.type}`} style={{ position: 'fixed', bottom: 20, left: '50%', transform: 'translateX(-50%)', zIndex: 9999 }}>
+      {renderContent()}
+      {toast && (
+        <div className={`toast toast-${toast.type} slide-in`}>
           {toast.message}
         </div>
       )}
-      {renderContent()}
     </div>
   );
 }
 
 export default App;
-
