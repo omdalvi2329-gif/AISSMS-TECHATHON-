@@ -68,9 +68,22 @@ function App() {
   // 1. Initialize Auth
   useEffect(() => {
     let isMounted = true;
+    let retryCount = 0;
+    const maxRetries = 3;
+
     const init = async () => {
       try {
-        const { data: { session: s }, error: sessionError } = await supabase.auth.getSession();
+        // Use a timeout for the session fetch to prevent hangs
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Session fetch timeout')), 5000)
+        );
+
+        const { data: { session: s }, error: sessionError } = await Promise.race([
+          sessionPromise,
+          timeoutPromise
+        ]);
+
         if (sessionError) throw sessionError;
         
         if (!isMounted) return;
@@ -91,16 +104,29 @@ function App() {
           setAuthLoading(false);
         }
       } catch (error) {
-        if (isMounted) {
-          console.error('Auth init error:', error);
-          const isNetworkError = error.message?.includes('fetch') || error.message?.includes('NetworkError') || !window.navigator.onLine;
-          if (isNetworkError) {
-            showToast('Connection error. Please check if your Supabase project is active.', 'error');
-          }
-          setAuthLoading(false);
-          setIsLoggedIn(false);
-          setCurrentPage('login');
+        if (!isMounted) return;
+        
+        console.error('Auth init error:', error);
+        
+        // Handle AbortError or Lock contention with a retry
+        if ((error.name === 'AbortError' || error.message?.includes('lock')) && retryCount < maxRetries) {
+          retryCount++;
+          setTimeout(init, 500 * retryCount);
+          return;
         }
+
+        const isNetworkError = error.message?.includes('fetch') || 
+                             error.message?.includes('NetworkError') || 
+                             error.message?.includes('ERR_CONNECTION') ||
+                             !window.navigator.onLine;
+
+        if (isNetworkError) {
+          showToast('Connection error. Please check your internet or if the Supabase project is active.', 'error');
+        }
+        
+        setAuthLoading(false);
+        setIsLoggedIn(false);
+        setCurrentPage('login');
       }
     };
     init();

@@ -14,7 +14,10 @@ const createSupabaseSingleton = () =>
     auth: {
       autoRefreshToken: true,
       persistSession: true,
-      detectSessionInUrl: true
+      detectSessionInUrl: true,
+      storageKey: 'agrisetu-auth-token',
+      storage: window.localStorage,
+      flowType: 'pkce'
     },
     realtime: {
       params: {
